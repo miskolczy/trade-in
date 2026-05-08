@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, minimum-scale=1, maximum-scale=1, user-scalable=no">
+<title>Revendo – Trade-in Wizard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════
+   DESIGN TOKENS — Figma Paint + Text Styles
+   ════════════════════════════════════════════ */
+:root {
+  /* Paint Styles */
+  --brand:       #00BB66;
+  --txt1:        #141414;
+  --txt2:        #333333;
+  --txt-muted:   #666666;
+  --txt-icon:    #999999;
+  --surf-warm:   #D5CCC7;
+  --surf-subtle: #F2F2F2;
+  --surf-walt:   #FAFAFA;
+  --surf-white:  #FFFFFF;
+  --border:      #DADADA;
+
+  /* Geometry */
+  --r-modal: 18px;
+  --r-field: 8px;
+  --r-card:  9px;
+  --r-btn:   1000px;
+
+  --ff: 'Montserrat', sans-serif;
+  --t:  .10s ease-out;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { font-family: var(--ff); background: var(--surf-subtle); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+/* ─── PDP ─── */
+.pdp { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #f0eeec; }
+.pdp-card { width: 280px; background: var(--surf-white); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,.10), 0 1px 4px rgba(0,0,0,.06); }
+.pdp-img { width: 100%; aspect-ratio: 4/5; background: linear-gradient(160deg, #e8e4e0 0%, #d5cfc9 100%); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.pdp-img::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35) 0%, transparent 65%); pointer-events: none; }
+.pdp-img img { width: 72%; height: 72%; object-fit: contain; position: relative; z-index: 1; drop-shadow: 0 12px 32px rgba(0,0,0,.18); }
+.pdp-badge { position: absolute; top: 14px; left: 14px; background: var(--brand); color: #fff; font-family: var(--ff); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 9px; border-radius: 100px; z-index: 2; }
+.pdp-info { padding: 18px 18px 6px; display: flex; flex-direction: column; gap: 2px; }
+.pdp-name  { font-size: 16px; font-weight: 700; color: var(--txt1); line-height: 1.3; }
+.pdp-spec  { font-size: 12px; font-weight: 500; color: var(--txt-muted); letter-spacing: .02em; }
+.pdp-footer { padding: 12px 18px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pdp-price { font-size: 22px; font-weight: 700; color: var(--txt1); letter-spacing: -.02em; }
+.pdp-btn   { background: var(--brand); color: #fff; border: none; height: 40px; padding: 0 18px; border-radius: var(--r-btn); font-family: var(--ff); font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; transition: opacity .15s, transform .1s; white-space: nowrap; flex-shrink: 0; }
+.pdp-btn:hover { opacity: .86; }
+.pdp-btn:active { transform: scale(.97); }
+
+/* ─── Backdrop ─── */
+.backdrop { position: fixed; inset: 0; background: rgba(51,51,51,.60); z-index: 100; opacity: 0; pointer-events: none; transition: opacity var(--t); }
+.backdrop.on { opacity: 1; pointer-events: all; }
+
+/* ─── Modal shell ─── */
+.shell { 
+  position: fixed; 
+  top: 50%; 
+  left: 50%; 
+  transform: translate(-50%, -50%); 
+  width: 500px; 
+  max-width: calc(100vw - 32px); 
+  max-height: calc(100dvh - 48px); 
+  z-index: 200; 
+  border-radius: var(--r-modal); 
+  overflow: hidden; 
+  opacity: 0; 
+  pointer-events: none; 
+  transition: opacity var(--t); 
+}
+.shell.on { opacity: 1; pointer-events: all; }
+
+/* Mobile ≤750px → full-width bottom sheet */
+@media (max-width: 750px) {
+  .shell { 
+    width: 100vw !important; 
+    max-width: 100vw; 
+    left: 0 !important; 
+    top: auto !important; 
+    bottom: 0 !important; 
+    transform: none !important; 
+    border-radius: var(--r-modal) var(--r-modal) 0 0; 
+    max-height: 92dvh; 
+  }
+}
+
+/* ─── Fade & Wrapper ─── */
+#sw { 
+  display: flex; 
+  flex-direction: column; 
+  max-height: calc(100dvh - 48px);
+  min-height: 365px;
+}
+#sw.fade { opacity: 0; }
+
+@media (max-width: 750px) {
+  #sw { max-height: 92dvh; }
+}
+
+/* ─── Modal anatomy ─── */
+
+/* modal-body */
+.m-body { 
+  background: var(--surf-walt); 
+  display: flex; 
+  flex-direction: column; 
+  flex: 1; 
+  min-height: 0; 
+}
+
+/* modal-header */
+.m-hdr { display: flex; align-items: center; gap: 12px; padding: 20px 20px 0 20px; min-height: 24px; flex-shrink: 0; text-align: center; }
+.m-hdr.tall { align-items: flex-start; }
+.m-hdr-ctr  { flex: 1; display: flex; flex-direction: column; }
+
+/* Step label */
+.step-lbl { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); flex: 1; min-height: 24px; align-content: center; }
+.dev-ttl  { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .02em; color: var(--txt-muted); min-height: 24px; align-content: center; }
+
+/* modal-content */
+.m-content { padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+
+/* modal-footer */
+.m-foot { background: var(--surf-subtle); padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; flex-shrink: 0; }
+
+/* ─── Icon button ─── */
+.btn-ico { width: 24px; height: 24px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--txt2); padding: 0; flex-shrink: 0; border-radius: 4px; transition: background .1s; }
+.btn-ico:hover { background: var(--surf-subtle); }
+.btn-ico svg { width: 20px; height: 20px; display: block; }
+
+/* Buttons */
+.btn-cta { background: var(--brand); color: #fff; border: none; width: 189px; height: 40px; border-radius: var(--r-btn); font-family: var(--ff); font-size: 14px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; transition: opacity .15s, transform .1s; }
+.btn-cta:hover { opacity: .86; }
+.btn-cta:active { transform: scale(.97); }
+
+.btn-skip { background: none; border: none; font-family: var(--ff); font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt2); cursor: pointer; transition: opacity .15s; }
+.btn-skip:hover { opacity: .6; }
+
+/* Text styles */
+.intro-sub { font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: 0; color: var(--txt2); }
+.intro-h   { font-size: 28px; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; color: var(--txt2); }
+.f-title { font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: 0; color: var(--txt2); margin-block-start: 12px; }
+.f-lbl { font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: 0; color: var(--txt2); margin-block-start: 12px; }
+.f-grp { display: flex; flex-direction: column; gap: 12px; }
+
+/* ─── Confirmed row (Chips) ─── */
+.chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.f-done { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 10px 0 14px; background: var(--surf-white); border: 1px solid var(--brand); border-radius: 100px; cursor: pointer; transition: border-color .1s, background-color .1s; flex-shrink: 0; gap: 6px; width: fit-content; }
+.f-done:hover { border-color: #008844; background-color: rgba(0,187,102,.04); }
+.f-val { font-size: 13px; font-weight: 600; line-height: 1.4; letter-spacing: .02em; color: var(--txt2); }
+.ico-chk { width: 16px; height: 16px; color: var(--brand); flex-shrink: 0; }
+
+#search-results {
+  height: 202px;
+  overflow-y: auto;
+}
+
+/* ════════════════════════════════════════════
+   NATIVE INPUTS (Category & Model)
+   ════════════════════════════════════════════ */
+.native-input {
+  width: 100%;
+  min-height: 40px;
+  background: var(--surf-white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-field);
+  padding: 0 12px 0 20px;
+  font-family: var(--ff);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--txt2);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color .1s;
+}
+
+.native-input.error {
+  border-color: #c0392b;
+}
+
+.native-input.error:focus {
+  border-color: #c0392b;
+}
+
+.native-input::placeholder {
+  font-style: italic;
+  color: var(--txt-muted);
+}
+
+input[type="search"].native-input {
+  background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="%23999999" xmlns="http://www.w3.org/2000/svg"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: left 16px center;
+  background-size: 20px;
+  padding-left: 44px;
+}
+
+input[type="search"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Custom chevron for native select */
+.native-select {
+  background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="%23999999" xmlns="http://www.w3.org/2000/svg"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>');  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+/* ════════════════════════════════════════════
+   RADIO LIST  — "Dropdown Small"
+   ════════════════════════════════════════════ */
+.radio-list { background: var(--surf-white); border: 1px solid var(--border); border-radius: var(--r-field); overflow: hidden; display: flex; flex-direction: column; }
+.radio-row { height: 40px; display: flex; align-items: center; padding: 0 18px; gap: 16px; cursor: pointer; border-bottom: 1px solid var(--surf-subtle); transition: background .08s; flex-shrink: 0; }
+.radio-row:last-child { border-bottom: none; }
+.radio-row:hover { background: var(--surf-subtle); }
+.radio-row.sel { background: rgba(0,187,102,.04); border-color: var(--brand); }
+
+.radio-ico { width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.radio-ico svg { width: 18px; height: 18px; display: block; }
+.r-circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--txt-icon); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: border-color .1s; }
+.radio-row.sel .r-circle { border-color: var(--brand); }
+.radio-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); opacity: 0; transition: opacity .1s; }
+.radio-row.sel .radio-dot { opacity: 1; }
+
+.radio-txt { font-size: 12px; font-weight: 700; letter-spacing: 0; color: var(--txt2); line-height: 1.4; }
+.radio-row.sel .radio-txt { color: var(--txt1); }
+.radio-list.has-sel { border-color: var(--brand); }
+
+/* ─── Optical Condition card ─── */
+.cond-card { position: relative; border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; background: var(--surf-white); cursor: pointer; transition: border-color .1s, box-shadow .1s; flex-shrink: 0; }
+.cond-card:hover { border-color: #aaa; }
+.cond-card.sel { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
+
+.cond-img  { width: 100%; height: 200px; background: var(--surf-warm); display: flex; align-items: center; justify-content: center; }
+.cond-emoji { font-size: 52px; line-height: 1; }
+.cond-body { padding: 18px 8px 18px 18px; display: flex; align-items: flex-start; gap: 16px; }
+.cond-txt  { flex: 1; display: flex; flex-direction: column; gap: 4px; -webkit-hyphens: auto; -ms-hyphens: auto; hyphens: auto; }
+.cond-ttl  { font-size: 14px; font-weight: 700; letter-spacing: 0; color: var(--txt2); line-height: 1.4; }
+.cond-dsc  { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); }
+.cond-radio { position: absolute; top: 12px; left: 12px; background: var(--surf-white); width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--txt-icon); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: border-color .1s; }.cond-card.sel .cond-radio { border-color: var(--brand); }
+.cond-rdot  { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); opacity: 0; transition: opacity .1s; }
+.cond-card.sel .cond-rdot { opacity: 1; }
+
+/* ─── Tooltip bar ─── */
+.tooltip-bar  { background: var(--surf-subtle); padding: 20px; display: flex; flex-direction: column; overflow: visible; flex-shrink: 0; }
+.tooltip-row  { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.tooltip-help { width: 18px; height: 18px; color: var(--txt-muted); flex-shrink: 0; }
+.tooltip-lbl  { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt2); }
+.tooltip-body { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); max-height: 0; overflow: hidden; transition: max-height .2s, padding .2s; padding-left: 26px; }
+.tooltip-body.open { max-height: 60px; padding-top: 8px; }
+
+/* ─── Offer screen ─── */
+.offer-dev   { font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: 0; color: var(--txt2); margin-block-start: 12px; }
+.offer-price { font-size: 28px; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; color: var(--txt2); }
+.offer-price span { color: var(--brand); }
+.offer-sub   { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); }
+
+/* ─── Loading (Fallback, not used by logic) ─── */
+.load-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 44px 20px; gap: 16px; }
+.spinner   { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.load-txt  { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); }
+</style>
+</head>
+<body>
+
+<div class="pdp">
+  <button class="pdp-btn" onclick="openEntry()">In den Warenkorb</button>
+</div>
+
+<div class="backdrop" id="bd" onclick="closeModal()"></div>
+
+<div class="shell" id="shell"><div id="sw"></div></div>
+
+<script>
+/* ── Icons ── */
+const I = {
+  close: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`,
+  back:  `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.77 3.77L16 2 6 12l10 10 1.77-1.77L9.54 12z"/></svg>`,
+  check: `<svg class="ico-chk" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm4.59-12.42L10 14.17l-2.59-2.58L6 13l4 4 8-8z"/></svg>`,
+  help:  `<svg class="tooltip-help" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>`,
+};
+
+/* ── State ── */
+const S = { cat: null, sub: null, specs: {}, power: null, optical: null };
+
+/* ── Data ── */
+const CATS = ['MacBook','iPhone','iPad','iMac','Mac'];
+const SUBS = {
+  MacBook: ['MacBook Air','MacBook Pro'],
+  iPhone: [
+    'iPhone 16e','iPhone 16 Pro Max','iPhone 16 Pro','iPhone 16 Plus','iPhone 16',
+    'iPhone 15 Pro Max','iPhone 15 Pro','iPhone 15 Plus','iPhone 15',
+    'iPhone SE (3rd generation)',
+    'iPhone 14 Pro Max','iPhone 14 Pro','iPhone 14 Plus','iPhone 14',
+    'iPhone 13 Pro Max','iPhone 13 Pro','iPhone 13 mini','iPhone 13',
+    'iPhone 12 Pro Max','iPhone 12 Pro','iPhone 12 mini','iPhone 12',
+  ],
+  iPad:         ['iPad','iPad Mini','iPad Air','iPad Pro'],
+  iMac:         ['iMac','iMac Pro'],
+  Mac:          ['Mac Mini','Mac Studio','Mac Pro'],
+};
+
+const IPHONE_SPECS = {
+  'iPhone 16e':          { storage:['128 GB','256 GB','512 GB'], color:['Schwarz','Weiß'] },
+  'iPhone 16 Pro Max':   { storage:['256 GB','512 GB','1 TB'], color:['Titan Schwarz','Titan Weiß','Titan Natur','Titan Wüstensand'] },
+  'iPhone 16 Pro':       { storage:['128 GB','256 GB','512 GB','1 TB'], color:['Titan Schwarz','Titan Weiß','Titan Natur','Titan Wüstensand'] },
+  'iPhone 16 Plus':      { storage:['128 GB','256 GB','512 GB'], color:['Schwarz','Weiß','Pink','Blaugrün','Ultramarin'] },
+  'iPhone 16':           { storage:['128 GB','256 GB','512 GB'], color:['Schwarz','Weiß','Pink','Blaugrün','Ultramarin'] },
+  'iPhone 15 Pro Max':   { storage:['256 GB','512 GB','1 TB'], color:['Titan Schwarz','Titan Weiß','Titan Blau','Titan Natur'] },
+  'iPhone 15 Pro':       { storage:['128 GB','256 GB','512 GB','1 TB'], color:['Titan Schwarz','Titan Weiß','Titan Blau','Titan Natur'] },
+  'iPhone 15 Plus':      { storage:['128 GB','256 GB','512 GB'], color:['Schwarz','Blau','Grün','Gelb','Pink'] },
+  'iPhone 15':           { storage:['128 GB','256 GB','512 GB'], color:['Schwarz','Blau','Grün','Gelb','Pink'] },
+  'iPhone SE (3rd generation)': { storage:['64 GB','128 GB','256 GB'], color:['Mitternacht','Polarstern','(PRODUCT)RED'] },
+  'iPhone 14 Pro Max':   { storage:['128 GB','256 GB','512 GB','1 TB'], color:['Space Schwarz','Silber','Gold','Dunkellila'] },
+  'iPhone 14 Pro':       { storage:['128 GB','256 GB','512 GB','1 TB'], color:['Space Schwarz','Silber','Gold','Dunkellila'] },
+  'iPhone 14 Plus':      { storage:['128 GB','256 GB','512 GB'], color:['Mitternacht','Polarstern','(PRODUCT)RED','Blau','Violett'] },
+  'iPhone 14':           { storage:['128 GB','256 GB','512 GB'], color:['Mitternacht','Polarstern','(PRODUCT)RED','Blau','Violett'] },
+  'iPhone 13 Pro Max':   { storage:['128 GB','256 GB','512 GB','1 TB'], color:['Graphit','Gold','Silber','Sierrablau'] },
+  'iPhone 13 Pro':       { storage:['128 GB','256 GB','512 GB','1 TB'], color:['Graphit','Gold','Silber','Sierrablau'] },
+  'iPhone 13 mini':      { storage:['128 GB','256 GB','512 GB'], color:['Rosé','Blau','Mitternacht','Polarstern','(PRODUCT)RED'] },
+  'iPhone 13':           { storage:['128 GB','256 GB','512 GB'], color:['Rosé','Blau','Mitternacht','Polarstern','(PRODUCT)RED'] },
+  'iPhone 12 Pro Max':   { storage:['128 GB','256 GB','512 GB'], color:['Silber','Graphit','Gold','Pazifikblau'] },
+  'iPhone 12 Pro':       { storage:['128 GB','256 GB','512 GB'], color:['Silber','Graphit','Gold','Pazifikblau'] },
+  'iPhone 12 mini':      { storage:['64 GB','128 GB','256 GB'], color:['Schwarz','Weiß','(PRODUCT)RED','Grün','Blau'] },
+  'iPhone 12':           { storage:['64 GB','128 GB','256 GB'], color:['Schwarz','Weiß','(PRODUCT)RED','Grün','Blau'] },
+};
+
+const FIELDS = {
+  'MacBook Air': [
+    { k:'size',    l:'Bildschirmgrösse', o:['11″','13″','15″'] },
+    { k:'year',    l:'Baujahr',          o:['2015','2017','2018','2019','2020','2022','2023','2024'] },
+    { k:'storage', l:'Speicher',         o:['128 GB','256 GB','512 GB','1 TB','2 TB'] },
+    { k:'ram',     l:'RAM',              o:['4 GB','8 GB','16 GB','24 GB'] },
+    { k:'cpu',     l:'Prozessor',        o:['Intel Core i3','Intel Core i5','Intel Core i7','M1','M2','M3','M4'] },
+    { k:'color',   l:'Farbe',            o:['Silber','Space Grau','Gold','Mitternacht','Polarstern','Himmelblau'] },
+  ],
+  'MacBook Pro': [
+    { k:'size',    l:'Bildschirmgrösse', o:['13″','14″','15″','16″'] },
+    { k:'year',    l:'Baujahr',          o:['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024'] },
+    { k:'storage', l:'Speicher',         o:['128 GB','256 GB','512 GB','1 TB','2 TB','4 TB','8 TB'] },
+    { k:'ram',     l:'RAM',              o:['8 GB','16 GB','18 GB','24 GB','32 GB','36 GB','48 GB','64 GB','96 GB','128 GB'] },
+    { k:'cpu',     l:'Prozessor',        o:['Intel Core i5','Intel Core i7','Intel Core i9','M1','M1 Pro','M1 Max','M2','M2 Pro','M2 Max','M3','M3 Pro','M3 Max','M4','M4 Pro','M4 Max'] },
+    { k:'color',   l:'Farbe',            o:['Silber','Space Grau','Space Schwarz'] },
+  ],
+  iPhone: [
+    { k:'storage', l:'Speicher', o:['64 GB','128 GB','256 GB','512 GB','1 TB'] },
+    { k:'color',   l:'Farbe',    o:['Schwarz','Weiß','Silber','Gold','Graphit','Pazifikblau','Rosé','Blau','Mitternacht','Polarstern','(PRODUCT)RED','Grün','Violett','Pink','Gelb','Blaugrün','Ultramarin','Sierrablau','Dunkellila','Space Schwarz','Titan Schwarz','Titan Weiß','Titan Blau','Titan Natur','Titan Wüstensand'] },
+  ],
+  iPad: [
+    { k:'size',         l:'Bildschirmdiagonale', o:['7.9″','8.3″','9.7″','10.2″','10.5″','10.9″','11″','12.9″','13″'] },
+    { k:'year',         l:'Baujahr',             o:['2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2024'] },
+    { k:'storage',      l:'Speicher',            o:['16 GB','32 GB','64 GB','128 GB','256 GB','512 GB','1 TB','2 TB'] },
+    { k:'connectivity', l:'Konnektivität',        o:['WiFi','WiFi + Cellular'] },
+    { k:'color',        l:'Farbe',               o:['Schwarz','Weiss','Silber','Space Grau','Gold','Roségold','Blau','Pink','Gelb','Grün','Polarstern','Rosé','Violett','Sky Blau','Space Schwarz'] },
+  ],
+  'iMac': [
+    { k:'size',    l:'Bildschirmdiagonale', o:['21.5″','24″','27″'] },
+    { k:'year',    l:'Baujahr',   o:['2012','2013','2014','2015','2017','2019','2020','2021','2023','2024'] },
+    { k:'cpu',     l:'Prozessor', o:['Apple M1','Apple M3','Apple M4','Intel Core i3 3.6 GHz','Intel Core i5 1.4 GHz','Intel Core i5 1.6 GHz','Intel Core i5 2.3 GHz','Intel Core i5 2.7 GHz','Intel Core i5 2.8 GHz','Intel Core i5 2.9 GHz','Intel Core i5 3.0 GHz','Intel Core i5 3.1 GHz','Intel Core i5 3.2 GHz','Intel Core i5 3.3 GHz','Intel Core i5 3.4 GHz','Intel Core i5 3.5 GHz','Intel Core i5 3.8 GHz','Intel Core i7 3.1 GHz','Intel Core i7 3.2 GHz','Intel Core i7 3.3 GHz','Intel Core i7 3.4 GHz','Intel Core i7 3.5 GHz','Intel Core i7 3.6 GHz','Intel Core i7 3.8 GHz','Intel Core i7 4.0 GHz','Intel Core i7 4.2 GHz','Intel Core i9 3.6 GHz'] },
+    { k:'ram',     l:'RAM',       o:['8 GB','16 GB','24 GB','32 GB','64 GB','128 GB'] },
+    { k:'storage', l:'Speicher',  o:['256 GB SSD','512 GB SSD','1 TB HDD','1 TB Fusion Drive','1 TB SSD','2 TB Fusion Drive','2 TB SSD','3 TB Fusion Drive','4 TB SSD','8 TB SSD'] },
+    { k:'color',   l:'Farbe',     o:['Blau','Gelb','Grün','Orange','Rosé','Silber','Violett'] },
+  ],
+  'iMac Pro': [
+    { k:'size',    l:'Bildschirmdiagonale', o:['27″'] },
+    { k:'year',    l:'Baujahr',   o:['2017'] },
+    { k:'cpu',     l:'Prozessor', o:['Intel Xeon W 8-Core 3.2 GHz','Intel Xeon W 10-Core 3.0 GHz','Intel Xeon W 14-Core 2.5 GHz','Intel Xeon W 18-Core 2.3 GHz'] },
+    { k:'ram',     l:'RAM',       o:['32 GB','64 GB','128 GB','256 GB'] },
+    { k:'storage', l:'Speicher',  o:['1 TB SSD','2 TB SSD','4 TB SSD'] },
+  ],
+  'Mac Mini': [
+    { k:'year',    l:'Baujahr',   o:['2018','2020','2023','2024'] },
+    { k:'cpu',     l:'Prozessor', o:['Intel Core i3','Intel Core i5','Intel Core i7','M1','M2','M2 Pro','M4','M4 Pro'] },
+    { k:'ram',     l:'RAM',       o:['8 GB','16 GB','24 GB','32 GB','64 GB'] },
+    { k:'storage', l:'Speicher',  o:['256 GB SSD','512 GB SSD','1 TB SSD','2 TB SSD','4 TB SSD','8 TB SSD'] },
+  ],
+  'Mac Studio': [
+    { k:'year',    l:'Baujahr',   o:['2022','2023'] },
+    { k:'cpu',     l:'Prozessor', o:['M1 Max','M1 Ultra','M2 Max','M2 Ultra'] },
+    { k:'ram',     l:'RAM',       o:['32 GB','64 GB','96 GB','128 GB','192 GB'] },
+    { k:'storage', l:'Speicher',  o:['512 GB SSD','1 TB SSD','2 TB SSD','4 TB SSD','8 TB SSD'] },
+  ],
+  'Mac Pro': [
+    { k:'year',    l:'Baujahr',   o:['2019','2023'] },
+    { k:'cpu',     l:'Prozessor', o:['Intel Xeon W','M2 Ultra'] },
+    { k:'ram',     l:'RAM',       o:['32 GB','48 GB','64 GB','96 GB','128 GB','192 GB','384 GB','768 GB','1.5 TB'] },
+    { k:'storage', l:'Speicher',  o:['256 GB SSD','512 GB SSD','1 TB SSD','2 TB SSD','4 TB SSD','8 TB SSD'] },
+  ],
+};
+
+function fields() {
+  if (S.cat === 'iPhone' && S.sub && IPHONE_SPECS[S.sub]) {
+    const m = IPHONE_SPECS[S.sub];
+    return [{ k:'storage', l:'Speicher', o: m.storage }, { k:'color', l:'Farbe', o: m.color }];
+  }
+  if (S.sub && FIELDS[S.sub]) return FIELDS[S.sub];
+  if (FIELDS[S.cat]) return FIELDS[S.cat];
+  return FIELDS['MacBook Air'];
+}
+
+/* ── Zustände & Bilder ── */
+const CONDS = [
+  { 
+    k:'wie-neu',
+    t:'Keine Gebrauchsspuren',    
+    d:'Das Produkt sieht aus wie neu und weist keine Gebrauchsspuren auf.',
+    imgs: {
+      mac: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/macbook-wie-neu.png',
+      iphone: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/iphone-wie-neu.png',
+      ipad: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/ipad-wie-neu.png'
+    }
+  },
+  { 
+    k:'feine',
+    t:'Feine Gebrauchsspuren',    
+    d:'Die Gebrauchsspuren können nur unter besten Lichtverhältnissen gesehen werden.',
+    imgs: {
+      mac: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/macbook-sehr-gut.png',
+      iphone: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/iphone-sehr-gut.png',
+      ipad: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/ipad-sehr-gut.png'
+    }
+  },
+  { 
+    k:'sichtbar',
+    t:'Sichtbare Gebrauchsspuren', 
+    d:'Kratzer oder Abnutzungen sind unter normalen Lichtverhältnissen ersichtlich.',
+    imgs: {
+      mac: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/macbook-gebraucht.png',
+      iphone: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/iphone-gebraucht.png',
+      ipad: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/ipad-gebraucht.png'
+    }
+  },
+  { 
+    k:'deutlich',
+    t:'Deutliche Gebrauchsspuren', 
+    d:'Kratzer oder auch Abnutzungen sind deutlich zu erkennen und unübersehbar.',
+    imgs: {
+      mac: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/macbook-stark-gebraucht.png',
+      iphone: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/iphone-stark-gebraucht.png',
+      ipad: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/ipad-stark-gebraucht.png'
+    }
+  },
+  { 
+    k:'kaputt',
+    t:'Optisch kaputt',            
+    d:'Stärkere Einkerbungen oder Risse, flimmernde oder defekte Bereiche.',
+    imgs: {
+      mac: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/macbook-optisch-kaputt.png',
+      iphone: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/iphone-optisch-kaputt.png',
+      ipad: 'https://cdn.shopify.com/s/files/1/0892/4312/3976/files/ipad-optisch-kaputt.png'
+    }
+  },
+];
+const PRICES = { 'wie-neu':920, 'feine':820, 'sichtbar':770, 'deutlich':600, 'kaputt':350 };
+
+function getCondImgUrl(condKey) {
+  const cond = CONDS.find(c => c.k === condKey);
+  if (!cond) return '';
+  if (S.cat === 'iPhone') return cond.imgs.iphone;
+  if (S.cat === 'iPad') return cond.imgs.ipad;
+  return cond.imgs.mac; // Fallback für MacBook, iMac und Mac
+}
+
+/* ── Modal helpers ── */
+function show(html) {
+  const m = document.getElementById('shell');
+  document.getElementById('bd').classList.add('on');
+  document.getElementById('sw').innerHTML = html;
+  m.classList.add('on');
+}
+
+function closeModal() {
+  document.getElementById('shell').classList.remove('on');
+  document.getElementById('bd').classList.remove('on');
+  S.cat = null; S.sub = null; S.specs = {}; S.power = null; S.optical = null;
+}
+
+function go(fn) {
+  fn();
+}
+
+function e(s) { return (s||'').replace(/'/g,"\\'"); }
+function devSum() {
+  const f = fields();
+  const p = [S.sub || 'MacBook Air'];
+  f.forEach(ff => { if (S.specs[ff.k]) p.push(S.specs[ff.k]); });
+  return p.join(', ');
+}
+
+/* ── Screens ── */
+function openEntry() {
+  show(`
+  <div class="m-body">
+    <div class="m-hdr">
+      <span style="flex:1"></span>
+      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+    </div>
+    <div class="m-content">
+      <div class="intro-sub">Jetzt verkaufen und sparen</div>
+      <div class="intro-h">Dein altes Gerät ist bares Geld wert!</div>
+    </div>
+  </div>
+  <div class="m-foot">
+    <button class="btn-cta" onclick="go(step1Cat)">Jetzt Verkaufen</button>
+    <button class="btn-skip" onclick="closeModal()">Weiter ohne Verkauf</button>
+  </div>`);
+}
+
+/* ── Custom search ── */
+function catForSub(sub) {
+  for (const [cat, subs] of Object.entries(SUBS)) {
+    if (subs.includes(sub)) return cat;
+  }
+  return null;
+}
+
+function step1Cat() {
+  show(`
+  <div class="m-body">
+    <div class="m-hdr">
+      <span class="step-lbl">Schritt 1 / 3</span>
+      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+    </div>
+    <div class="m-content">
+      <div class="f-title">Was möchtest du verkaufen?</div>
+      <input 
+        type="search"
+        id="device-search"
+        class="native-input"
+        placeholder="Suche nach Gerät oder Modell"
+        autocomplete="off"
+        oninput="onDeviceInput(this.value)"
+      >
+      <div id="search-error" style="display:none; font-size:12px; font-weight:500; color:#c0392b; padding: 2px 4px; letter-spacing:.02em;"></div>
+      <div id="search-results">
+        ${renderCatList()}
+      </div>
+    </div>
+  </div>`);
+}
+
+function renderCatList() {
+  return `<div class="radio-list">
+    ${CATS.map(c => `
+      <div class="radio-row" onclick="pickCat('${e(c)}')">
+        <div class="r-circle"><div class="radio-dot"></div></div>
+        <span class="radio-txt">${c}</span>
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderSubResults(matches) {
+  return `<div class="radio-list">
+    ${matches.map(({ sub, cat }) => `
+      <div class="radio-row" onclick="S.cat='${e(cat)}'; pickSub('${e(sub)}')">
+        <div class="r-circle"><div class="radio-dot"></div></div>
+        <span class="radio-txt">${sub}</span>
+      </div>`).join('')}
+  </div>`;
+}
+
+function onDeviceInput(val) {
+  const results = document.getElementById('search-results');
+  const error = document.getElementById('search-error');
+  if (!results) return;
+  val = val.trim();
+  if (!val) {
+    error.style.display = 'none';
+    results.innerHTML = renderCatList();
+    document.getElementById('device-search').classList.remove('error');
+    return;
+  }
+  const q = val.toLowerCase();
+  const matches = [];
+  for (const [cat, subs] of Object.entries(SUBS)) {
+    for (const sub of subs) {
+      if (sub.toLowerCase().includes(q)) matches.push({ sub, cat });
+    }
+  }
+  if (!matches.length) {
+    error.style.display = 'block';
+    error.textContent = 'Kein Gerät gefunden.';
+    results.innerHTML = renderCatList();
+    document.getElementById('device-search').classList.add('error');
+  } else {
+    error.style.display = 'none';
+    results.innerHTML = renderSubResults(matches);
+    document.getElementById('device-search').classList.remove('error');
+  }
+}
+
+function pickCat(c) { S.cat = c; S.sub = null; S.specs = {}; S.power = null; S.optical = null; go(step1Sub); }
+
+function step1Sub() {
+  const subs = SUBS[S.cat] || [];
+  
+  show(`
+  <div class="m-body">
+    <div class="m-hdr">
+      <button class="btn-ico" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.optical=null; go(step1Cat)">${I.back}</button>
+      <span class="step-lbl">Schritt 1 / 3</span>
+      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+    </div>
+    <div class="m-content">
+      <div class="f-title">Was möchtest du verkaufen?</div>
+      
+      <div class="chips-wrap">
+        <div class="f-done" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.optical=null; go(step1Cat)">
+          <span class="f-val">${S.cat}</span>${I.check}
+        </div>
+      </div>
+      
+      <div class="f-grp">
+        <span class="f-lbl">Modell</span>
+        <select class="native-input native-select" onchange="if(this.value) pickSub(this.value)">
+          <option value="" disabled ${!S.sub ? 'selected' : ''}>Wähle</option>
+          ${subs.map(s => `<option value="${s}" ${s === S.sub ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="tooltip-bar">
+    <div class="tooltip-row" onclick="togTip()">
+      ${I.help}<span class="tooltip-lbl">So findest du alle Infos, die du für dieses Formular brauchst</span>
+    </div>
+    <div class="tooltip-body" id="tb">${tooltipText()}</div>
+  </div>`);
+}
+
+function pickSub(s) { S.sub = s; S.specs = {}; S.power = null; S.optical = null; go(() => step2(0)); }
+
+function step2(idx) {
+  const fs = fields();
+  if (idx >= fs.length) { go(step3Tech); return; }
+  const f = fs[idx];
+  const val = S.specs[f.k];
+
+  let conf = `<div class="chips-wrap">
+    <div class="f-done" onclick="S.sub=null; S.specs={}; S.power=null; S.optical=null; go(step1Sub)"><span class="f-val">${S.sub}</span>${I.check}</div>`;
+  for (let i = 0; i < idx; i++) {
+    const ff = fs[i];
+    if (S.specs[ff.k]) {
+      conf += `<div class="f-done" onclick="rewind(${i})"><span class="f-val">${S.specs[ff.k]}</span>${I.check}</div>`;
+    }
+  }
+  conf += `</div>`;
+
+  const radioRows = f.o.map(o => `
+    <div class="radio-row${val === o ? ' sel' : ''}" onclick="pickSpec('${e(f.k)}','${e(o)}',${idx})">
+      <div class="r-circle"><div class="radio-dot"></div></div>
+      <span class="radio-txt">${o}</span>
+    </div>`).join('');
+
+  show(`
+  <div class="m-body">
+    <div class="m-hdr">
+      <button class="btn-ico" onclick="${idx === 0 ? 'S.sub=null; S.specs={}; S.power=null; S.optical=null; go(step1Sub)' : 'rewind(' + (idx-1) + ')'}">${I.back}</button>
+      <span class="step-lbl">Schritt 2 / 3</span>
+      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+    </div>
+    <div class="m-content">
+      <div class="f-title">Was möchtest du verkaufen?</div>
+      ${conf}
+      <div class="f-grp">
+        <span class="f-lbl">${f.l}</span>
+        <div class="radio-list${val ? ' has-sel' : ''}">
+          ${radioRows}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tooltip-bar">
+    <div class="tooltip-row" onclick="togTip()">
+      ${I.help}<span class="tooltip-lbl">So findest du alle Infos, die du für dieses Formular brauchst</span>
+    </div>
+    <div class="tooltip-body" id="tb">${tooltipText()}</div>
+  </div>`);
+}
+
+function pickSpec(k, v, idx) { S.specs[k] = v; go(() => step2(idx + 1)); }
+function rewind(to) { 
+  const fs = fields(); 
+  for (let i = to; i < fs.length; i++) delete S.specs[fs[i].k]; 
+  S.power = null; 
+  S.optical = null; 
+  go(() => step2(to)); 
+}
+
+function step3Tech() {
+  const dev = devSum();
+  show(`
+  <div class="m-body">
+    <div class="m-hdr tall">
+      <button class="btn-ico" onclick="rewind(fields().length - 1)">${I.back}</button>
+      <div class="m-hdr-ctr">
+        <span class="step-lbl">Schritt 3 / 3</span>
+        <span class="dev-ttl">${dev}</span>
+      </div>
+      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+    </div>
+    <div class="m-content">
+      <div class="f-lbl">Lässt sich das Gerät einschalten?</div>
+      <div class="radio-list${S.power ? ' has-sel' : ''}">
+        <div class="radio-row${S.power === 'Ja' ? ' sel' : ''}" onclick="pickPow('Ja')">
+          <div class="r-circle"><div class="radio-dot"></div></div>
+          <span class="radio-txt">Ja</span>
+        </div>
+        <div class="radio-row${S.power === 'Nein' ? ' sel' : ''}" onclick="pickPow('Nein')">
+          <div class="r-circle"><div class="radio-dot"></div></div>
+          <span class="radio-txt">Nein</span>
+        </div>
+      </div>
+    </div>
+  </div>`);
+}
+
+function pickPow(v) { 
+  S.power = v; 
+  if (v === 'Nein') {
+    go(step3Offer);
+  } else {
+    go(step3Opt); 
+  }
+}
+
+function step3Opt() {
+  const dev = devSum();
+  show(`
+  <div class="m-body">
+    <div class="m-hdr tall">
+      <button class="btn-ico" style="margin-top:2px" onclick="S.power=null; S.optical=null; go(step3Tech)">${I.back}</button>
+      <div class="m-hdr-ctr">
+        <span class="step-lbl">Schritt 3 / 3</span>
+        <span class="dev-ttl">${dev}</span>
+      </div>
+      <button class="btn-ico" style="margin-top:2px" onclick="closeModal()">${I.close}</button>
+    </div>
+    <div class="m-content" style="padding-bottom:20px">
+      <div class="f-lbl">Wie ist der optische Zustand?</div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr);gap:12px">
+        ${CONDS.map(c => `
+        <div class="cond-card${S.optical === c.k ? ' sel' : ''}" onclick="pickOpt('${c.k}')">
+          <div class="cond-img">
+            <img src="${getCondImgUrl(c.k)}" alt="${c.t}" style="width:100%; height:100%; object-fit:cover; ">
+          </div>
+          <div class="cond-body">
+            <div class="cond-radio"><div class="cond-rdot"></div></div>
+            <div class="cond-txt">
+              <div class="cond-ttl">${c.t}</div>
+              <div class="cond-dsc">${c.d}</div>
+            </div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`);
+}
+
+function pickOpt(k) { 
+  S.optical = k; 
+  go(step3Offer);
+}
+
+function step3Offer() {
+  const dev = devSum();
+  let condLbl = '';
+  let priceHtml = '';
+  let backAction = '';
+
+  if (S.power === 'Nein') {
+    condLbl = 'Defekt';
+    priceHtml = 'Kostenloses Recycling';
+    backAction = 'S.power=null; go(step3Tech)';
+  } else {
+    condLbl = CONDS.find(c => c.k === S.optical)?.t || '';
+    const price = PRICES[S.optical] || 770;
+    priceHtml = `Erhalte <span>CHF&nbsp;${price.toLocaleString('de-CH')}</span>, wenn du jetzt dein Gerät verkaufst.`;
+    backAction = 'S.optical=null; go(step3Opt)';
+  }
+
+  show(`
+  <div class="m-body">
+    <div class="m-hdr">
+      <button class="btn-ico" onclick="${backAction}">${I.back}</button>
+      <span class="step-lbl">Schritt 3 / 3</span>
+      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+    </div>
+    <div class="m-content">
+      <div class="offer-dev">${dev}</div>
+      <div class="offer-sub">Zustand: ${condLbl}</div>
+      <div class="offer-price">${priceHtml}</div>
+    </div>
+  </div>
+  <div class="m-foot">
+    <button class="btn-cta" onclick="closeModal()">${S.power === 'Nein' ? 'Jetzt Recyceln' : 'Jetzt Verkaufen'}</button>
+    <button class="btn-skip" onclick="closeModal()">Später Weiterfahren</button>
+  </div>`);
+}
+
+function togTip() { const b = document.getElementById('tb'); if (b) b.classList.toggle('open'); }
+
+function tooltipText() {
+  return ['iPhone','iPad'].includes(S.cat)
+    ? 'Öffne Einstellungen > Allgemein > Info'
+    : 'Wähle Menü Apple > Über diesen Mac';
+}
+</script>
+</body>
+</html>
