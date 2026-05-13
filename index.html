@@ -134,7 +134,7 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
 .chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .f-done { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 6px 0 6px; background: var(--surf-white); border: 1px solid var(--brand); border-radius: 100px; cursor: pointer; transition: border-color .1s, background-color .1s; flex-shrink: 0; gap: 4px; width: fit-content; }
 .f-done:hover { border-color: #008844; background-color: rgba(0,187,102,.04); }
-.f-val { font-size: 12px; font-weight: 600; line-height: 1.4; letter-spacing: .02em; color: var(--txt2); }
+.f-val { font-size: 12px; font-weight: 600; line-height: 1.4; letter-spacing: .02em; color: var(--txt2); max-width: 30ch; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .ico-chk  { width: 24px; height: 24px; color: var(--brand); flex-shrink: 0; }
 .ico-close { width: 24px; height: 24px; color: var(--txt-icon); flex-shrink: 0; }
 
@@ -162,6 +162,9 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
   -webkit-appearance: none;
   appearance: none;
   transition: border-color .1s;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .native-input:focus { border-color: var(--brand); }
@@ -221,7 +224,7 @@ input[type="search"]::-webkit-search-cancel-button {
 .radio-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--txt-icon); opacity: 0; transition: opacity .1s; }
 .radio-row:active .radio-dot { opacity: 1; }
 
-.radio-txt { font-size: 12px; font-weight: 700; letter-spacing: 0; color: var(--txt2); line-height: 1.4; }
+.radio-txt { font-size: 12px; font-weight: 700; letter-spacing: 0; color: var(--txt2); line-height: 1.4; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 /* ─── Optical Condition card ─── */
 .cond-card { position: relative; border: 1px solid var(--border); border-radius: var(--r-field); overflow: hidden; background: var(--surf-white); cursor: pointer; transition: border-color .1s, box-shadow .1s; flex-shrink: 0; }
