@@ -94,7 +94,7 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
   display: flex; 
   flex-direction: column; 
   max-height: calc(100dvh - 48px);
-  min-height: 365px;
+  min-height: 380px;
 }
 
 
@@ -114,13 +114,13 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
 }
 
 /* modal-header */
-.m-hdr { display: flex; align-items: center; gap: 12px; padding: 20px 20px 0 20px; min-height: 24px; flex-shrink: 0; text-align: center; }
-.m-hdr.tall { align-items: flex-start; }
-.m-hdr-ctr  { flex: 1; display: flex; flex-direction: column; }
+.m-hdr { display: flex; flex-direction: column; gap: 6px; padding: 20px; flex-shrink: 0; }
+.m-hdr-top  { display: flex; align-items: center; gap: 48px; min-height: 24px; }
+.m-hdr-ctr  { display: flex; flex-direction: column; text-align: center; }
 
 /* Step label */
 .step-lbl { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); flex: 1; min-height: 24px; align-content: center; }
-.dev-ttl  { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .02em; color: var(--txt-muted); min-height: 24px; align-content: center; }
+.dev-ttl  { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .02em; color: var(--txt-muted); align-content: center; }
 
 /* Offer label with animated check */
 .offer-check-wrap { display: flex; justify-content: center; padding: 8px 0 4px; }
@@ -150,7 +150,7 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
 
 /* Text styles */
 .intro-h   { font-size: 28px; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; color: var(--txt2); }
-.f-title { font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: 0; color: var(--txt2); margin-block-start: 12px; }
+.f-title { font-size: 18px; font-weight: 600; line-height: 100%; letter-spacing: 0; color: var(--txt2); margin-block-start: 12px; }
 .f-lbl { font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: 0; color: var(--txt2); margin-block-start: 12px; }
 .f-grp { display: flex; flex-direction: column; gap: 12px; }
 
@@ -187,9 +187,9 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
   transition: border-color .1s;
 }
 
-.native-input.error {
-  border-color: #c0392b;
-}
+.native-input:focus { border-color: var(--brand); }
+
+.native-input.error { border-color: #c0392b; }
 
 .native-input.error:focus {
   border-color: #c0392b;
@@ -266,14 +266,17 @@ input[type="search"]::-webkit-search-cancel-button {
 .tooltip-body { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); max-height: 0; overflow: hidden; transition: max-height .2s, padding .2s; padding-left: 26px; }
 .tooltip-body.open { max-height: 60px; padding-top: 8px; }
 
+/* ─── Coupon button active state ─── */
+.coupon-btn-active { background: var(--brand) !important; border-color: var(--brand) !important; color: #fff !important; }
+
 /* ─── Offer screen ─── */
 .offer-price { font-size: 28px; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; color: var(--txt2); }
 .offer-price span { color: var(--brand); }
 .offer-sub   { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); }
 
 /* ─── Progress bar ─── */
-.rvi-progress { display: flex; gap: 5px; padding: 10px 20px; flex-shrink: 0; }
-.rvi-seg      { flex: 1; height: 4px; border-radius: 99px; background: var(--border); overflow: hidden; position: relative; }
+.rvi-progress { display: flex; flex: 1; align-items: center; justify-content: center; flex-shrink: 0; }
+.rvi-seg      { flex: 1; max-width: 240px; height: 4px; border-radius: 99px; background: var(--border); overflow: hidden; position: relative; }
 .rvi-fill     { position: absolute; inset: 0; background: var(--txt1); border-radius: 99px; transform-origin: left; transform: scaleX(0); transition: transform .35s cubic-bezier(.4,0,.2,1); }
 
 </style>
@@ -296,10 +299,11 @@ const I = {
   check: `<svg class="ico-chk" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.0008 13.5998L15.9008 7.6998C16.0841 7.51647 16.3174 7.4248 16.6008 7.4248C16.8841 7.4248 17.1174 7.51647 17.3008 7.6998C17.4841 7.88314 17.5758 8.11647 17.5758 8.3998C17.5758 8.68314 17.4841 8.91647 17.3008 9.0998L10.7008 15.6998C10.5008 15.8998 10.2674 15.9998 10.0008 15.9998C9.73411 15.9998 9.50078 15.8998 9.30078 15.6998L6.70078 13.0998C6.51745 12.9165 6.42578 12.6831 6.42578 12.3998C6.42578 12.1165 6.51745 11.8831 6.70078 11.6998C6.88411 11.5165 7.11745 11.4248 7.40078 11.4248C7.68411 11.4248 7.91745 11.5165 8.10078 11.6998L10.0008 13.5998Z" fill="currentColor"/></svg>`,
   help:  `<svg class="tooltip-help" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.8375 17.6375C13.0792 17.3958 13.2 17.1 13.2 16.75C13.2 16.4 13.0792 16.1042 12.8375 15.8625C12.5958 15.6208 12.3 15.5 11.95 15.5C11.6 15.5 11.3042 15.6208 11.0625 15.8625C10.8208 16.1042 10.7 16.4 10.7 16.75C10.7 17.1 10.8208 17.3958 11.0625 17.6375C11.3042 17.8792 11.6 18 11.95 18C12.3 18 12.5958 17.8792 12.8375 17.6375ZM12 22C10.6167 22 9.31667 21.7375 8.1 21.2125C6.88333 20.6875 5.825 19.975 4.925 19.075C4.025 18.175 3.3125 17.1167 2.7875 15.9C2.2625 14.6833 2 13.3833 2 12C2 10.6167 2.2625 9.31667 2.7875 8.1C3.3125 6.88333 4.025 5.825 4.925 4.925C5.825 4.025 6.88333 3.3125 8.1 2.7875C9.31667 2.2625 10.6167 2 12 2C13.3833 2 14.6833 2.2625 15.9 2.7875C17.1167 3.3125 18.175 4.025 19.075 4.925C19.975 5.825 20.6875 6.88333 21.2125 8.1C21.7375 9.31667 22 10.6167 22 12C22 13.3833 21.7375 14.6833 21.2125 15.9C20.6875 17.1167 19.975 18.175 19.075 19.075C18.175 19.975 17.1167 20.6875 15.9 21.2125C14.6833 21.7375 13.3833 22 12 22ZM12 20C14.2333 20 16.125 19.225 17.675 17.675C19.225 16.125 20 14.2333 20 12C20 9.76667 19.225 7.875 17.675 6.325C16.125 4.775 14.2333 4 12 4C9.76667 4 7.875 4.775 6.325 6.325C4.775 7.875 4 9.76667 4 12C4 14.2333 4.775 16.125 6.325 17.675C7.875 19.225 9.76667 20 12 20ZM12.1 7.7C12.5167 7.7 12.8792 7.83333 13.1875 8.1C13.4958 8.36667 13.65 8.7 13.65 9.1C13.65 9.46667 13.5375 9.79167 13.3125 10.075C13.0875 10.3583 12.8333 10.625 12.55 10.875C12.1667 11.2083 11.8292 11.575 11.5375 11.975C11.2458 12.375 11.1 12.825 11.1 13.325C11.1 13.5583 11.1875 13.7542 11.3625 13.9125C11.5375 14.0708 11.7417 14.15 11.975 14.15C12.225 14.15 12.4375 14.0667 12.6125 13.9C12.7875 13.7333 12.9 13.525 12.95 13.275C13.0167 12.925 13.1667 12.6125 13.4 12.3375C13.6333 12.0625 13.8833 11.8 14.15 11.55C14.5333 11.1833 14.8625 10.7833 15.1375 10.35C15.4125 9.91667 15.55 9.43333 15.55 8.9C15.55 8.05 15.2042 7.35417 14.5125 6.8125C13.8208 6.27083 13.0167 6 12.1 6C11.4667 6 10.8625 6.13333 10.2875 6.4C9.7125 6.66667 9.275 7.075 8.975 7.625C8.85833 7.825 8.82083 8.0375 8.8625 8.2625C8.90417 8.4875 9.01667 8.65833 9.2 8.775C9.43333 8.90833 9.675 8.95 9.925 8.9C10.175 8.85 10.3833 8.70833 10.55 8.475C10.7333 8.225 10.9625 8.03333 11.2375 7.9C11.5125 7.76667 11.8 7.7 12.1 7.7Z" fill="currentColor"/></svg>`,
   chipClose: `<svg class="ico-close" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.0008 13.4002L9.10078 16.3002C8.91745 16.4835 8.68411 16.5752 8.40078 16.5752C8.11745 16.5752 7.88411 16.4835 7.70078 16.3002C7.51745 16.1169 7.42578 15.8835 7.42578 15.6002C7.42578 15.3169 7.51745 15.0835 7.70078 14.9002L10.6008 12.0002L7.70078 9.1252C7.51745 8.94186 7.42578 8.70853 7.42578 8.4252C7.42578 8.14186 7.51745 7.90853 7.70078 7.7252C7.88411 7.54186 8.11745 7.4502 8.40078 7.4502C8.68411 7.4502 8.91745 7.54186 9.10078 7.7252L12.0008 10.6252L14.8758 7.7252C15.0591 7.54186 15.2924 7.4502 15.5758 7.4502C15.8591 7.4502 16.0924 7.54186 16.2758 7.7252C16.4758 7.9252 16.5758 8.1627 16.5758 8.4377C16.5758 8.7127 16.4758 8.94186 16.2758 9.1252L13.3758 12.0002L16.2758 14.9002C16.4591 15.0835 16.5508 15.3169 16.5508 15.6002C16.5508 15.8835 16.4591 16.1169 16.2758 16.3002C16.0758 16.5002 15.8383 16.6002 15.5633 16.6002C15.2883 16.6002 15.0591 16.5002 14.8758 16.3002L12.0008 13.4002Z" fill="currentColor"/></svg>`,
+  discount: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.499 5.5C16.6035 5.50017 17.499 6.39556 17.499 7.5V11.707C17.499 12.2504 17.2783 12.7714 16.8867 13.1484L11.2881 18.54C10.5032 19.296 9.25697 19.2838 8.48633 18.5137L4.48633 14.5137C3.71566 13.743 3.70395 12.497 4.45996 11.7119L9.85156 6.1123C10.2286 5.72104 10.7488 5.50003 11.292 5.5H15.499ZM5.90039 13.0986L9.90039 17.0986L15.499 11.707V7.5H11.292L5.90039 13.0986ZM13.5098 8.49023C14.062 8.49032 14.5098 8.938 14.5098 9.49023V9.50977C14.5098 10.062 14.062 10.5097 13.5098 10.5098H13.4902C12.9379 10.5098 12.4902 10.0621 12.4902 9.50977V9.49023C12.4902 8.93795 12.9379 8.49023 13.4902 8.49023H13.5098Z" fill="currentColor"/></svg>`,
 };
 
 /* ── State ── */
-const S = { cat: null, sub: null, specs: {}, power: null, optical: null };
+const S = { cat: null, sub: null, specs: {}, power: null, battery: null, optical: null };
 
 /* ── Data ── */
 const CATS = ['MacBook','iPhone','iPad','iMac','Mac'];
@@ -490,7 +494,8 @@ function show(html) {
 function closeModal() {
   document.getElementById('shell').classList.remove('on');
   document.getElementById('bd').classList.remove('on');
-  S.cat = null; S.sub = null; S.specs = {}; S.power = null; S.optical = null;
+  S.cat = null; S.sub = null; S.specs = {}; S.power = null; S.battery = null; S.optical = null;
+  _coupons = [];
   _prevFills = [0, 0, 0];
 }
 
@@ -511,8 +516,10 @@ function openEntry() {
   show(`
   <div class="m-body">
     <div class="m-hdr">
-      <span style="flex:1"></span>
-      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      <div class="m-hdr-top">
+        <span style="flex:1"></span>
+        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      </div>
     </div>
     <div class="m-content">
       <div class="f-title">Jetzt verkaufen und sparen</div>
@@ -537,10 +544,12 @@ function step1Cat() {
   show(`
   <div class="m-body">
     <div class="m-hdr">
-      <span class="step-lbl">Schritt 1 / 3</span>
-      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      <div class="m-hdr-top">
+        <button class="btn-ico" style="visibility:hidden;pointer-events:none">${I.back}</button>
+        ${progressBar()}
+        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      </div>
     </div>
-    ${progressBar()}
     <div class="m-content">
       <div class="f-title">Was möchtest du verkaufen?</div>
       <input 
@@ -560,12 +569,21 @@ function step1Cat() {
   setProgress([0, 0, 0]);
 }
 
+const CAT_MAX_PRICES = {
+  'MacBook': 2270,
+  'iPhone':  1388,
+  'iPad':    1623,
+  'iMac':    1577,
+  'Mac':     2789,
+};
+
 function renderCatList() {
   return `<div class="radio-list">
     ${CATS.map(c => `
       <div class="radio-row" onclick="pickCat('${e(c)}')">
         <div class="r-circle"><div class="radio-dot"></div></div>
         <span class="radio-txt">${c}</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:500;color:var(--txt-muted);white-space:nowrap">bis zu ${CAT_MAX_PRICES[c].toLocaleString('de-CH')}.–</span>
       </div>`).join('')}
   </div>`;
 }
@@ -618,16 +636,17 @@ function step1Sub() {
   show(`
   <div class="m-body">
     <div class="m-hdr">
-      <button class="btn-ico" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.optical=null; go(step1Cat)">${I.back}</button>
-      <span class="step-lbl">Schritt 1 / 3</span>
-      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      <div class="m-hdr-top">
+        <button class="btn-ico" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Cat)">${I.back}</button>
+        ${progressBar()}
+        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      </div>
     </div>
-    ${progressBar()}
     <div class="m-content">
       <div class="f-title">Was möchtest du verkaufen?</div>
       
       <div class="chips-wrap">
-        <div class="f-done" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.optical=null; go(step1Cat)">
+        <div class="f-done" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Cat)">
           ${I.check}<span class="f-val">${S.cat}</span>${I.chipClose}
         </div>
       </div>
@@ -654,12 +673,12 @@ function pickSub(s) { S.sub = s; S.specs = {}; S.power = null; S.optical = null;
 
 function step2(idx) {
   const fs = fields();
-  if (idx >= fs.length) { go(step3Tech); return; }
+  if (idx >= fs.length) { go(() => step3(0)); return; }
   const f = fs[idx];
   const val = S.specs[f.k];
 
   let conf = `<div class="chips-wrap">
-    <div class="f-done" onclick="S.sub=null; S.specs={}; S.power=null; S.optical=null; go(step1Sub)">${I.check}<span class="f-val">${S.sub}</span>${I.chipClose}</div>`;
+    <div class="f-done" onclick="S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Sub)">${I.check}<span class="f-val">${S.sub}</span>${I.chipClose}</div>`;
   for (let i = 0; i < idx; i++) {
     const ff = fs[i];
     if (S.specs[ff.k]) {
@@ -677,11 +696,12 @@ function step2(idx) {
   show(`
   <div class="m-body">
     <div class="m-hdr">
-      <button class="btn-ico" onclick="${idx === 0 ? 'S.sub=null; S.specs={}; S.power=null; S.optical=null; go(step1Sub)' : 'rewind(' + (idx-1) + ')'}">${I.back}</button>
-      <span class="step-lbl">Schritt 2 / 3</span>
-      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      <div class="m-hdr-top">
+        <button class="btn-ico" onclick="${idx === 0 ? 'S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Sub)' : 'rewind(' + (idx-1) + ')'}">${I.back}</button>
+        ${progressBar()}
+        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      </div>
     </div>
-    ${progressBar()}
     <div class="m-content">
       <div class="f-title">Was möchtest du verkaufen?</div>
       ${conf}
@@ -707,87 +727,176 @@ function rewind(to) {
   const fs = fields(); 
   for (let i = to; i < fs.length; i++) delete S.specs[fs[i].k]; 
   S.power = null; 
+  S.battery = null;
   S.optical = null; 
   go(() => step2(to)); 
 }
 
-function step3Tech() {
-  const dev = devSum();
-  show(`
-  <div class="m-body">
-    <div class="m-hdr tall">
-      <button class="btn-ico" onclick="rewind(fields().length - 1)">${I.back}</button>
-      <div class="m-hdr-ctr">
-        <span class="step-lbl">Schritt 3 / 3</span>
-        <span class="dev-ttl">${dev}</span>
-      </div>
-      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
-    </div>
-    ${progressBar()}
-    <div class="m-content">
-      <div class="f-lbl">Lässt sich das Gerät einschalten?</div>
-      <div class="radio-list${S.power ? ' has-sel' : ''}">
-        <div class="radio-row${S.power === 'Ja' ? ' sel' : ''}" onclick="pickPow('Ja')">
-          <div class="r-circle"><div class="radio-dot"></div></div>
-          <span class="radio-txt">Ja</span>
-        </div>
-        <div class="radio-row${S.power === 'Nein' ? ' sel' : ''}" onclick="pickPow('Nein')">
-          <div class="r-circle"><div class="radio-dot"></div></div>
-          <span class="radio-txt">Nein</span>
-        </div>
-      </div>
-    </div>
-  </div>`);
-  setProgress([1, 1, .33]);
-}
-
-function pickPow(v) { 
-  S.power = v; 
-  if (v === 'Nein') {
-    go(step3Offer);
-  } else {
-    go(step3Opt); 
+/* ── Step 3 — dynamic question array ── */
+function step3Questions() {
+  const qs = [
+    { k:'power',   type:'radio', lbl:`Lässt sich dein ${S.cat} einschalten?`,   opts:['Ja','Nein'] },
+  ];
+  if (S.cat === 'iPad') {
+    qs.push({ k:'battery', type:'radio', lbl:'Hat der Akku mindestens 85 % Kapazität?', opts:['Ja','Nein'], tooltip:'Öffne Einstellungen → Batterie → Batteriezustand' });
   }
+  qs.push({ k:'optical', type:'cond', lbl:'Wie ist der optische Zustand?' });
+  return qs;
 }
 
-function step3Opt() {
+function clearStep3From(idx) {
+  const qs = step3Questions();
+  for (let i = idx; i < qs.length; i++) S[qs[i].k] = null;
+}
+
+function step3(idx) {
+  const qs = step3Questions();
+  if (idx >= qs.length) { go(step3Offer); return; }
+  const q  = qs[idx];
   const dev = devSum();
+  const val = S[q.k];
+  // progress: spread questions evenly before offer (offer = 100%)
+  const prog = (idx + 1) / (qs.length + 1);
+
+  const backAction = idx === 0
+    ? `rewind(fields().length - 1)`
+    : `clearStep3From(${idx - 1}); go(()=>step3(${idx - 1}))`;
+
+  let contentHtml;
+  if (q.type === 'radio') {
+    contentHtml = `
+      <div class="f-lbl">${q.lbl}</div>
+      <div class="radio-list${val ? ' has-sel' : ''}">
+        ${q.opts.map(o => `
+          <div class="radio-row${val === o ? ' sel' : ''}" onclick="pickStep3(${idx},'${e(o)}')">
+            <div class="r-circle"><div class="radio-dot"></div></div>
+            <span class="radio-txt">${o}</span>
+          </div>`).join('')}
+      </div>`;
+  } else {
+    contentHtml = `
+      <div class="f-lbl">${q.lbl}</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+        ${CONDS.map(c => `
+          <div class="cond-card${val === c.k ? ' sel' : ''}" onclick="pickStep3(${idx},'${c.k}')">
+            <div class="cond-img">
+              <img src="${getCondImgUrl(c.k)}" alt="${c.t}" style="width:100%;height:100%;object-fit:cover">
+            </div>
+            <div class="cond-body">
+              <div class="cond-radio"><div class="cond-rdot"></div></div>
+              <div class="cond-txt">
+                <div class="cond-ttl">${c.t}</div>
+                <div class="cond-dsc">${c.d}</div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  const tooltipHtml = q.tooltip
+    ? `<div class="tooltip-bar">
+        <div class="tooltip-row" onclick="togTip()">
+          ${I.help}<span class="tooltip-lbl">So findest du alle Infos, die du für dieses Formular brauchst</span>
+        </div>
+        <div class="tooltip-body" id="tb">${q.tooltip}</div>
+      </div>`
+    : `<div class="tooltip-bar" style="display:none"></div>`;
+
+  const contentStyle = q.type === 'cond' ? ' style="padding-bottom:20px"' : '';
+
   show(`
   <div class="m-body">
-    <div class="m-hdr tall">
-      <button class="btn-ico" style="margin-top:2px" onclick="S.power=null; S.optical=null; go(step3Tech)">${I.back}</button>
+    <div class="m-hdr">
+      <div class="m-hdr-top">
+        <button class="btn-ico" onclick="${backAction}">${I.back}</button>
+        ${progressBar()}
+        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      </div>
       <div class="m-hdr-ctr">
-        <span class="step-lbl">Schritt 3 / 3</span>
         <span class="dev-ttl">${dev}</span>
       </div>
-      <button class="btn-ico" style="margin-top:2px" onclick="closeModal()">${I.close}</button>
     </div>
-    ${progressBar()}
-    <div class="m-content" style="padding-bottom:20px">
-      <div class="f-lbl">Wie ist der optische Zustand?</div>
-      <div style="display: grid; grid-template-columns: repeat(2, 1fr);gap:12px">
-        ${CONDS.map(c => `
-        <div class="cond-card${S.optical === c.k ? ' sel' : ''}" onclick="pickOpt('${c.k}')">
-          <div class="cond-img">
-            <img src="${getCondImgUrl(c.k)}" alt="${c.t}" style="width:100%; height:100%; object-fit:cover; ">
-          </div>
-          <div class="cond-body">
-            <div class="cond-radio"><div class="cond-rdot"></div></div>
-            <div class="cond-txt">
-              <div class="cond-ttl">${c.t}</div>
-              <div class="cond-dsc">${c.d}</div>
-            </div>
-          </div>
-        </div>`).join('')}
-      </div>
+    <div class="m-content"${contentStyle}>${contentHtml}
     </div>
-  </div>`);
-  setProgress([1, 1, .66]);
+  </div>
+  ${tooltipHtml}`);
+  setProgress([1, 1, prog]);
 }
 
-function pickOpt(k) { 
-  S.optical = k; 
-  go(step3Offer);
+function pickStep3(idx, v) {
+  const qs = step3Questions();
+  S[qs[idx].k] = v;
+  // power=Nein → skip remaining questions, go straight to offer
+  if (qs[idx].k === 'power' && v === 'Nein') { go(step3Offer); return; }
+  go(() => step3(idx + 1));
+}
+
+const VALID_COUPONS = ['CODE', 'GUTSCHEINCODE', 'GUTSCHEIN'];
+let _coupons = [];
+
+function applyCoupon() {
+  const input = document.getElementById('coupon-input');
+  const error = document.getElementById('coupon-error');
+  const chips = document.getElementById('coupon-chips');
+  if (!input) return;
+  const val = input.value.trim().toUpperCase();
+  if (!val) return;
+  if (!VALID_COUPONS.includes(val)) {
+    input.classList.add('error');
+    error.style.display = 'block';
+    error.textContent = 'Ungültiger Gutscheincode.';
+    return;
+  }
+  if (_coupons.includes(val)) {
+    input.classList.add('error');
+    error.style.display = 'block';
+    error.textContent = 'Dieser Code wurde bereits angewendet.';
+    return;
+  }
+  _coupons.push(val);
+  input.value = '';
+  input.classList.remove('error');
+  input.blur();
+  error.style.display = 'none';
+  document.getElementById('coupon-btn').classList.remove('coupon-btn-active');
+  renderCouponChips();
+}
+
+function removeCoupon(code) {
+  _coupons = _coupons.filter(c => c !== code);
+  document.getElementById('coupon-input').classList.remove('error');
+  document.getElementById('coupon-error').style.display = 'none';
+  renderCouponChips();
+}
+
+function renderCouponChips() {
+  const chips = document.getElementById('coupon-chips');
+  if (!chips) return;
+  chips.innerHTML = _coupons.map(c => `
+    <div class="f-done" style="background:var(--surf-subtle);border-color:var(--border)">
+      <span style="display:flex;align-items:center;color:var(--txt-icon)">${I.discount}</span><span class="f-val" style="color:var(--txt-muted)">${c}</span>
+      <span onclick="removeCoupon('${c}')" style="display:flex;align-items:center;cursor:pointer">${I.chipClose}</span>
+    </div>`).join('');
+}
+
+function couponHtml() {
+  return `
+  <div style="display:flex;gap:8px;align-items:center">
+    <input type="text" id="coupon-input" class="native-input" placeholder="Gutscheincode" autocomplete="off"
+      oninput="this.classList.remove('error'); document.getElementById('coupon-error').style.display='none'; document.getElementById('coupon-btn').classList.toggle('coupon-btn-active', this.value.length > 0)"
+      onkeydown="if(event.key==='Enter') applyCoupon()">
+    <button id="coupon-btn" onclick="applyCoupon()"
+      style="flex-shrink:0;height:40px;padding:0 16px;border-radius:var(--r-field);background:var(--surf-subtle);border:1px solid var(--border);font-family:var(--ff);font-size:14px;font-weight:500;color:var(--txt-muted);cursor:pointer;white-space:nowrap">
+      Anwenden
+    </button>
+  </div>
+  <div id="coupon-error" style="display:none;font-size:12px;font-weight:500;color:#c0392b;padding:2px 4px;letter-spacing:.02em;"></div>
+  <div id="coupon-chips" class="chips-wrap">${_coupons.map(c => `
+    <div class="f-done" style="background:var(--surf-subtle);border-color:var(--border)">
+      <span style="display:flex;align-items:center;color:var(--txt-icon)">${I.discount}</span><span class="f-val" style="color:var(--txt-muted)">${c}</span>
+      <span onclick="removeCoupon('${c}')" style="display:flex;align-items:center;cursor:pointer">${I.chipClose}</span>
+    </div>`).join('')}
+  </div>`;
 }
 
 function step3Offer() {
@@ -798,26 +907,30 @@ function step3Offer() {
 
   if (S.power === 'Nein') {
     condLbl = 'Defekt';
-    backAction = 'S.power=null; S.optical=null; go(step3Tech)';
+    backAction = '_coupons=[]; clearStep3From(0); go(()=>step3(0))';
   } else {
     condLbl = CONDS.find(c => c.k === S.optical)?.t || '';
     const price = PRICES[S.optical] || 770;
     priceHtml = `Erhalte <span>${price.toLocaleString('de-CH')}.–</span> wenn du jetzt dein ${S.cat} verkaufst.`;
-    backAction = 'S.optical=null; go(step3Opt)';
+    const lastIdx = step3Questions().length - 1;
+    backAction = `_coupons=[]; S.optical=null; go(()=>step3(${lastIdx}))`;
   }
+
+  const batteryLbl = S.battery ? ` / Batterie: ${S.battery === 'Ja' ? 'Mindestens 85%' : 'Unter 85%'}` : '';
 
   show(`
   <div class="m-body">
-    <div class="m-hdr tall">
-      <button class="btn-ico" onclick="${backAction}">${I.back}</button>
-      <div class="m-hdr-ctr">
-        <span class="step-lbl" style="display:none">Schritt 3 / 3</span>
-        <span class="dev-ttl">${dev}</span>
-        <span class="offer-sub">Zustand: ${condLbl}</span>
+    <div class="m-hdr">
+      <div class="m-hdr-top">
+        <button class="btn-ico" onclick="${backAction}">${I.back}</button>
+        ${progressBar()}
+        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
       </div>
-      <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      <div class="m-hdr-ctr">
+        <span class="dev-ttl">${dev}</span>
+        <span class="offer-sub">Zustand: ${condLbl}${batteryLbl}</span>
+      </div>
     </div>
-    ${progressBar(true)}
     <div class="m-content">
       ${S.power !== 'Nein' ? `
       <div class="offer-check-wrap">
@@ -829,6 +942,7 @@ function step3Offer() {
       <div class="offer-price">${priceHtml}</div>` : `
       <div class="f-title">Kein Restwert – kein Problem</div>
       <div class="intro-h">Wir kümmern uns darum.</div>`}
+      <div class="f-grp" style="margin-top:4px">${couponHtml()}</div>
     </div>
   </div>
   <div class="m-foot">
@@ -838,43 +952,33 @@ function step3Offer() {
   setProgress([1, 1, 1]);
 }
 
+/* ── Breadcrumb ── */
+function breadcrumb() {
+  return `<div class="m-hdr-ctr"><span class="dev-ttl" style="text-align:center">Verkaufen</span></div>`;
+}
+
 /* ── Progress bar ── */
 const DUR = 350, GAP = 40;
 let _prevFills = [0, 0, 0];
 
 function progressBar(hidden = false) {
-  return `<div class="rvi-progress"${hidden ? ' style="display:none"' : ''}>
+  return `<div class="rvi-progress"${hidden ? ' style="visibility:hidden"' : ''}>
     <div class="rvi-seg"><div class="rvi-fill" id="rf0"></div></div>
-    <div class="rvi-seg"><div class="rvi-fill" id="rf1"></div></div>
-    <div class="rvi-seg"><div class="rvi-fill" id="rf2"></div></div>
   </div>`;
 }
 
 function setProgress(next) {
-  const fills = [0,1,2].map(i => document.getElementById('rf'+i));
-  if (!fills[0]) return;
-  // Snap fills to previous state instantly (no transition), then animate to target
-  fills.forEach((el, i) => {
-    el.style.transition = 'none';
-    el.style.transitionDelay = '0ms';
-    el.style.transform = `scaleX(${_prevFills[i]})`;
-  });
-  // Force reflow so the snap is painted before we re-enable transitions
-  fills[0].getBoundingClientRect();
-  fills.forEach(el => { el.style.transition = ''; });
-
-  const totalChange = next.reduce((s, to, i) => s + (to - _prevFills[i]), 0);
-  const back = totalChange < 0;
-  let delay = 0;
-  (back ? [2,1,0] : [0,1,2]).forEach(i => {
-    const el   = fills[i];
-    const from = _prevFills[i];
-    const to   = next[i];
-    if (Math.abs(to - from) < 0.001) return;
-    el.style.transitionDelay = delay + 'ms';
-    el.style.transform = `scaleX(${to})`;
-    delay += DUR * Math.abs(to - from) + GAP;
-  });
+  const fill = document.getElementById('rf0');
+  if (!fill) return;
+  const prev  = _prevFills.reduce((s, v) => s + v, 0) / _prevFills.length;
+  const total = next.reduce((s, v) => s + v, 0) / next.length;
+  // Snap to previous state instantly, then animate to target
+  fill.style.transition = 'none';
+  fill.style.transitionDelay = '0ms';
+  fill.style.transform = `scaleX(${prev})`;
+  fill.getBoundingClientRect(); // force reflow
+  fill.style.transition = '';
+  fill.style.transform = `scaleX(${total})`;
   _prevFills = [...next];
 }
 
@@ -882,8 +986,8 @@ function togTip() { const b = document.getElementById('tb'); if (b) b.classList.
 
 function tooltipText() {
   return ['iPhone','iPad'].includes(S.cat)
-    ? 'Öffne Einstellungen > Allgemein > Info'
-    : 'Wähle Menü Apple > Über diesen Mac';
+    ? 'Öffne Einstellungen → Allgemein → Info'
+    : 'Wähle Menü Apple → Über diesen Mac';
 }
 </script>
 </body>
