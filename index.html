@@ -85,7 +85,7 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
 }
 
 @media (max-width: 750px) {
-  #sw { max-height: 92dvh; }
+  #sw { max-height: calc(100dvh - 24px); }
 }
 
 /* modal-header */
@@ -98,7 +98,7 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
 .dev-ttl  { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .02em; color: var(--txt-muted); align-content: center; }
 
 /* Offer label with animated check */
-.offer-check-wrap { display: flex; justify-content: center; padding: 8px 0 4px; }
+.offer-check-wrap { display: flex; justify-content: center;}
 .offer-circle { stroke-dasharray: 170; stroke-dashoffset: 170; animation: draw-circle 1s cubic-bezier(0,0,0,1) forwards; }
 .offer-tick   { stroke-dasharray: 70;  stroke-dashoffset: 70;  animation: draw-check 0.8s cubic-bezier(0,0,0,1) 0.25s forwards; }
 @keyframes draw-circle { to { stroke-dashoffset: 0; } }
@@ -262,7 +262,7 @@ input[type="search"]::-webkit-search-cancel-button {
 
 /* ─── Sell Timing Block ─── */
 .sell-timing         { background: var(--surf-white); border: 1px solid var(--border); border-radius: var(--r-field); padding: 14px 14px 0; }
-.sell-timing-hdr     { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 8px; margin-bottom: 6px; }
+.sell-timing-hdr     { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0px 8px;}
 .sell-timing-prices  { display: flex; gap: 8px; flex: 0 0 auto; margin-left: auto; }
 .sell-timing-prc     { display: flex; flex-direction: column; align-items: center; }
 .sell-timing-prc-val { font-size: 14px; font-weight: 600; color: var(--txt2); line-height: 1.2; letter-spacing: -.01em; min-height: 24px; display: flex; align-items: center; }
