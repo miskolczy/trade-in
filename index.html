@@ -144,6 +144,56 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
   border-radius: var(--r-field);
 }
 
+/* ─── Desktop-only views: icon-grid (categories) & image-grid (models) ─── */
+#search-results .results-mobile { display: block; }
+#search-results .results-desktop { display: none; }
+
+@media (min-width: 751px) {
+  #search-results .results-mobile { display: none; }
+  #search-results .results-desktop {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+.cat-card, .model-card {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 74px;
+  padding: 0 10px;
+  background: var(--surf-white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-field);
+  cursor: pointer;
+  transition: border-color .1s;
+  min-width: 0;
+}
+.cat-card:hover, .model-card:hover { border-color: #aaa; }
+
+.cat-card-icon, .model-card-img {
+  width: 64px;
+  height: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cat-card-icon svg { width: 100%; height: 100%; }
+.model-card-img img { width: 100%; height: 100%; object-fit: contain; }
+
+.cat-card-txt {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.cat-card-txt .radio-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cat-card-price { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); white-space: nowrap; }
+
 /* ════════════════════════════════════════════
    NATIVE INPUTS (Category & Model)
    ════════════════════════════════════════════ */
@@ -571,6 +621,32 @@ function step1Cat() {
   setProgress([0, 0, 0]);
 }
 
+/* Icons extracted 1:1 aus Figma "Desktop: Beliebte Haupt-Kategorien mit Icon" (64×48) */
+const CAT_ICONS = {
+  MacBook: `<svg width="64" height="48" viewBox="0 0 64 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M16 5C13.7909 5 12 6.79086 12 9V30C12 32.2091 13.7909 34 16 34H26C26 37.3137 23.3137 40 20 40V42H44V40C40.6863 40 38 37.3137 38 34H48C50.2091 34 52 32.2091 52 30V9C52 6.79086 50.2091 5 48 5H16ZM25.2916 40C26.9525 38.5341 28 36.3894 28 34H36C36 36.3894 37.0475 38.5341 38.7084 40H25.2916ZM15 7C14.4477 7 14 7.44772 14 8V27C14 27.5523 14.4477 28 15 28H49C49.5523 28 50 27.5523 50 27V8C50 7.44772 49.5523 7 49 7H15Z" fill="#333333"/></svg>`,
+  iPhone: `<svg width="64" height="48" viewBox="0 0 64 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M20 4C17.7909 4 16 5.79086 16 8V40C16 42.2091 17.7909 44 20 44H44C46.2091 44 48 42.2091 48 40V8C48 5.79086 46.2091 4 44 4H20ZM19 6C18.4477 6 18 6.44772 18 7V41C18 41.5523 18.4477 42 19 42H45C45.5523 42 46 41.5523 46 41V7C46 6.44772 45.5523 6 45 6H19Z" fill="#333333"/></svg>`,
+  iPad: `<svg width="64" height="48" viewBox="0 0 64 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M20 8C20 5.79086 21.7909 4 24 4H40C42.2091 4 44 5.79086 44 8V40C44 42.2091 42.2091 44 40 44H24C21.7909 44 20 42.2091 20 40V8ZM22 7C22 6.44772 22.4477 6 23 6H41C41.5523 6 42 6.44772 42 7V41C42 41.5523 41.5523 42 41 42H23C22.4477 42 22 41.5523 22 41V7Z" fill="#333333"/><path d="M35.369 28.5192C34.7157 29.1526 34.0024 29.0526 33.3157 28.7526C32.589 28.4459 31.9224 28.4326 31.1557 28.7526C30.1957 29.1659 29.689 29.0459 29.1157 28.5192C25.8624 25.1659 26.3424 20.0592 30.0357 19.8726C30.9357 19.9192 31.5624 20.3659 32.089 20.4059C32.8757 20.2459 33.629 19.7859 34.469 19.8459C35.4757 19.9259 36.2357 20.3259 36.7357 21.0459C34.6557 22.2926 35.149 25.0326 37.0557 25.7992C36.6757 26.7992 36.1824 27.7926 35.3624 28.5259L35.369 28.5192ZM32.0224 19.8326C31.9224 18.3459 33.129 17.1192 34.5157 16.9992C34.709 18.7192 32.9557 19.9992 32.0224 19.8326Z" fill="#333333"/></svg>`,
+  iMac: `<svg width="64" height="48" viewBox="0 0 64 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 32V33C12 34.1046 12.8954 35 14 35H50C51.1046 35 52 34.1046 52 33V32H47V16C47 14.3431 45.6569 13 44 13H20C18.3431 13 17 14.3431 17 16V32H12ZM20 15C19.4477 15 19 15.4477 19 16V32H45V16C45 15.4523 44.5523 15 44 15H20Z" fill="#333333"/></svg>`,
+  Mac: `<svg width="64" height="48" viewBox="0 0 64 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M39 4C39.5523 4 40 4.44772 40 5V8C42.2091 8 44 9.79086 44 12V29H42V11C42 10.4477 41.5523 10 41 10H15C14.4477 10 14 10.4477 14 11V37C14 37.5523 14.4477 38 15 38H30V40H18V42H21V44H13V42H16V40C13.7909 40 12 38.2091 12 36V12C12 9.79086 13.7909 8 16 8V5C16 4.44772 16.4477 4 17 4C17.5523 4 18 4.44772 18 5V8H38V5C38 4.44772 38.4477 4 39 4ZM30.4688 19.8457C31.4753 19.9257 32.2354 20.326 32.7354 21.0459C30.6557 22.2926 31.1492 25.0321 33.0557 25.7988C32.6757 26.7988 32.1823 27.793 31.3623 28.5264L31.3691 28.5195C30.7158 29.1528 30.0021 29.0529 29.3154 28.7529C28.5888 28.4463 27.9219 28.4329 27.1553 28.7529C26.1956 29.166 25.6885 29.0461 25.1152 28.5195C21.862 25.1662 22.3428 20.0597 26.0361 19.873C26.9358 19.9198 27.5623 20.3662 28.0889 20.4062C28.8754 20.2463 29.6289 19.7858 30.4688 19.8457ZM30.5156 16.999C30.7089 18.7189 28.9558 19.9995 28.0225 19.833C27.9225 18.3464 29.129 17.119 30.5156 16.999Z" fill="#333333"/><path d="M51 31C51.5523 31 52 31.4477 52 32V41C52 41.5523 51.5523 42 51 42H49.4004C49.1795 42 49 42.1795 49 42.4004C48.9998 43.2837 48.2837 43.9998 47.4004 44H36.5996C35.7163 43.9998 35.0002 43.2837 35 42.4004C35 42.1795 34.8205 42 34.5996 42H33C32.4477 42 32 41.5523 32 41V32C32 31.4477 32.4477 31 33 31H51ZM49 38C48.4477 38 48 38.4477 48 39C48 39.5523 48.4477 40 49 40C49.5523 40 50 39.5523 50 39C50 38.4477 49.5523 38 49 38Z" fill="#333333"/></svg>`,
+};
+
+/* Repräsentative Produktbilder pro Kategorie (User-Vorgabe) + exakte Treffer pro Modell, wo vorhanden */
+const SUB_IMAGES = {
+  'iMac':         'https://revendo.ch/cdn/shop/files/apple-imac-24-m4-10-core-cpu-und-10-core-gpu-late-2024-silber-silber-guenstig-gebraucht-kaufen-00.png',
+  'Mac Studio':   'https://revendo.ch/cdn/shop/files/apple-mac-studio-silber-guenstig-gebraucht-kaufen-1.png',
+  'iPad Pro':     'https://revendo.ch/cdn/shop/files/apple-ipad-pro-2025-13-apple-m5-pro-2025-space-schwarz-schwarz-guenstig-gebraucht-kaufen-00_8e176b8a-0f64-442d-9b72-aded621c1b8e.png',
+  'MacBook Pro':  'https://revendo.ch/cdn/shop/files/apple-macbook-pro-14-silber-guenstig-gebraucht-kaufen.png',
+  'iPhone 16 Pro Max': 'https://revendo.ch/cdn/shop/files/apple-iphone-17-pro-max-apple-a19-pro-3-nm-17-pro-max-silber-silber-guenstig-gebraucht-kaufen-00.png',
+};
+const CAT_FALLBACK_IMG = {
+  MacBook: SUB_IMAGES['MacBook Pro'],
+  iPhone:  SUB_IMAGES['iPhone 16 Pro Max'],
+  iPad:    SUB_IMAGES['iPad Pro'],
+  iMac:    SUB_IMAGES['iMac'],
+  Mac:     SUB_IMAGES['Mac Studio'],
+};
+function getSubImgUrl(sub, cat) { return SUB_IMAGES[sub] || CAT_FALLBACK_IMG[cat]; }
+
 const CAT_MAX_PRICES = {
   'MacBook': 2270,
   'iPhone':  1388,
@@ -580,22 +656,41 @@ const CAT_MAX_PRICES = {
 };
 
 function renderCatList() {
-  return `<div class="radio-list">
+  return `<div class="radio-list results-mobile">
     ${CATS.map(c => `
       <div class="radio-row" onclick="pickCat('${e(c)}')">
         <div class="r-circle"><div class="radio-dot"></div></div>
         <span class="radio-txt">${c}</span>
         <span style="margin-left:auto;font-size:12px;font-weight:500;color:var(--txt-muted);white-space:nowrap">bis zu ${CAT_MAX_PRICES[c].toLocaleString('de-CH')}.–</span>
       </div>`).join('')}
+  </div>
+  <div class="results-desktop">
+    ${CATS.map(c => `
+      <div class="cat-card" onclick="pickCat('${e(c)}')">
+        <div class="cat-card-icon">${CAT_ICONS[c]}</div>
+        <div class="cat-card-txt">
+          <span class="radio-txt">${c}</span>
+          <span class="cat-card-price">bis zu ${CAT_MAX_PRICES[c].toLocaleString('de-CH')}.–</span>
+        </div>
+      </div>`).join('')}
   </div>`;
 }
 
 function renderSubResults(matches) {
-  return `<div class="radio-list">
+  return `<div class="radio-list results-mobile">
     ${matches.map(({ sub, cat }) => `
       <div class="radio-row" onclick="S.cat='${e(cat)}'; pickSub('${e(sub)}')">
         <div class="r-circle"><div class="radio-dot"></div></div>
         <span class="radio-txt">${sub}</span>
+      </div>`).join('')}
+  </div>
+  <div class="results-desktop">
+    ${matches.map(({ sub, cat }) => `
+      <div class="model-card" onclick="S.cat='${e(cat)}'; pickSub('${e(sub)}')">
+        <div class="model-card-img"><img src="${getSubImgUrl(sub, cat)}" alt="${e(sub)}" loading="lazy"></div>
+        <div class="cat-card-txt">
+          <span class="radio-txt">${sub}</span>
+        </div>
       </div>`).join('')}
   </div>`;
 }
