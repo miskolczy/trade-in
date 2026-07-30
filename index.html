@@ -18,6 +18,7 @@
   --txt2:        #333333;
   --txt-muted:   #666666;
   --txt-icon:    #999999;
+  --txt-icon-off: #DADADA;   /* Icons im Disabled-State */
   --surf-warm:   #D5CCC7;
   --surf-subtle: #F2F2F2;
   --surf-walt:   #FAFAFA;
@@ -88,6 +89,66 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
   #sw { max-height: calc(100dvh - 24px); }
 }
 
+/* ─── Step-Transition: slide + fade ─── */
+@keyframes nav-in-fwd   { from { opacity: 0; transform: translateX(20px);  } to { opacity: 1; transform: translateX(0); } }
+@keyframes nav-in-back  { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes nav-out-fwd  { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-12px); } }
+@keyframes nav-out-back { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(12px);  } }
+/* fade = gleicher Screen materialisiert sich (Skeleton → Inhalt), also kein Slide */
+@keyframes nav-in-fade  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nav-out-fade { from { opacity: 1; } to { opacity: 0; } }
+
+.nav-in-fwd   { animation: nav-in-fwd   .26s cubic-bezier(.22,.61,.36,1) both; }
+.nav-in-back  { animation: nav-in-back  .26s cubic-bezier(.22,.61,.36,1) both; }
+.nav-in-fade  { animation: nav-in-fade  .26s cubic-bezier(.22,.61,.36,1) both; }
+.nav-out-fwd  { animation: nav-out-fwd  .15s ease-in both; }
+.nav-out-back { animation: nav-out-back .15s ease-in both; }
+.nav-out-fade { animation: nav-out-fade .15s ease-in both; }
+
+/* ─── Skeleton / Loading ─── Maße 1:1 aus Frame_6.svg (Canvas 500×477) ─── */
+/* Ein Schein über ALLE Flächen: --dx ist der x-Versatz des Elements innerhalb des
+   Contents. Ohne ihn läuft der Schein in jeder Form neu an; mit ihm teilen sich alle
+   Formen eine Wellenfront. Elemente an x=20 brauchen nichts (--dx: 0). */
+@keyframes sk-sweep {
+  from { background-position: calc(-650px - var(--dx, 0px)) 0; }
+  to   { background-position: calc(210px  - var(--dx, 0px)) 0; }
+}
+.sk       { background-color: var(--surf-subtle); background-repeat: no-repeat; background-size: 900px 100%;
+            background-image: linear-gradient(120deg, transparent 30%, var(--surf-white) 50%, transparent 70%);
+            animation: sk-sweep 1.7s linear infinite; }
+/* y74: 269×20 r10  ·  y165: 192×20 r10 */
+.sk-bar   { height: 20px; max-width: 100%; border-radius: 10px; }
+/* y106: 3 × 100×32 r16, Gap 8 (= .chips-wrap) */
+.sk-chip  { width: 100px; height: 32px; border-radius: 16px; flex-shrink: 0; }
+/* y197–319: 460×122, oben r12. Ausfaden per Maske, damit der Schein durchlaufen kann. */
+.sk-box   { height: 122px; border-radius: var(--r-field) var(--r-field) 0 0;
+            -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+                    mask-image: linear-gradient(180deg, #000 0%, transparent 100%); }
+/* Frame_8: zwei Preiszeilen, Zeilenabstand 13 */
+.sk-lines { display: flex; flex-direction: column; gap: 13px; margin-block-start: 6px; }
+/* Spinner = erstes Segment des offer-circle-Pfads, gegen den Uhrzeigersinn wie die
+   Zeichen-Animation, damit der Übergang als eine Bewegung liest. */
+@keyframes sk-spin { to { transform: rotate(-360deg); } }
+.sk-spin  { stroke-dasharray: 16 170; transform-origin: 40px 40px;
+            animation: sk-spin .9s linear infinite; }
+
+/* Bottom-Bar (tooltip-bar / m-foot): Fläche bleibt stehen, nur der Inhalt blendet
+   leicht verzögert ein – richtungsneutral, damit es nicht mitrutscht.
+   Tooltip: nur Fade. Footer: Fade + minimaler Lift. */
+@keyframes nav-in-bar  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nav-in-foot { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.nav-in-bar > *        { animation: nav-in-bar .3s cubic-bezier(.22,.61,.36,1) .07s backwards; }
+.m-foot.nav-in-bar > * { animation-name: nav-in-foot; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-in-fwd, .nav-in-back, .nav-in-fade,
+  .nav-out-fwd, .nav-out-back, .nav-out-fade,
+  .nav-in-bar > * { animation-duration: .01ms; animation-delay: 0s; }
+  .sk { animation: none; background-image: none; }
+  .sk-spin { animation: none; }
+}
+
 /* modal-header */
 .m-hdr { display: flex; flex-direction: column; gap: 6px; padding: 16px; flex-shrink: 0; }
 .m-hdr-top  { display: flex; align-items: center; gap: 48px; min-height: 24px; }
@@ -114,6 +175,8 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
 .btn-ico { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--txt2); padding: 4px; flex-shrink: 0; border-radius: 100px; transition: background .1s; }
 
 .btn-ico:hover { background: var(--surf-subtle); }
+.btn-ico:disabled { color: var(--txt-icon-off); cursor: default; }
+.btn-ico:disabled:hover { background: none; }
 .btn-ico svg { width: 24px; height: 24px; display: block; }
 
 /* Buttons */
@@ -533,10 +596,24 @@ function getCondImgUrl(condKey) {
 }
 
 /* ── Modal helpers ── */
+/* Key einer Bottom-Bar: Typ + sichtbarer Text. Ist er nach dem Render identisch,
+   war die Leiste im vorherigen Step schon so da → keine Animation. */
+function barKey(el) { return el.classList[0] + '|' + el.textContent.trim(); }
+
 function show(html) {
   const m = document.getElementById('shell');
+  const opening = !m.classList.contains('on');   // Modal fährt gerade auf → nur der Backdrop-Fade, innen nichts
   document.getElementById('bd').classList.add('on');
-  document.getElementById('sw').innerHTML = html;
+  const sw = document.getElementById('sw');
+  const prevBars = opening ? [] : [...sw.querySelectorAll('.tooltip-bar, .m-foot')].map(barKey);
+  sw.innerHTML = html;
+  if (!opening) {
+    const c = sw.querySelector('.m-content');
+    if (c) c.classList.add('nav-in-' + _navDir);
+    sw.querySelectorAll('.tooltip-bar, .m-foot').forEach(el => {
+      if (!prevBars.includes(barKey(el))) el.classList.add('nav-in-bar');
+    });
+  }
   m.classList.add('on');
 }
 
@@ -548,8 +625,29 @@ function closeModal() {
   _prevFills = [0, 0, 0];
 }
 
-function go(fn) {
-  fn();
+/* go(fn)          → vorwärts (Content kommt von rechts)
+   go(fn, 1)       → zurück   (Content kommt von links)
+   go(fn, 'fade')  → gleicher Screen, nur Cross-Fade (Skeleton → Inhalt) */
+const NAV_T = 150;
+let _navDir = 'fwd', _navBusy = false;
+
+function go(fn, back = false) {
+  _navDir = back === 'fade' ? 'fade' : back ? 'back' : 'fwd';
+  const c = document.querySelector('#sw .m-content');
+  if (!c || _navBusy) { fn(); return; }
+  _navBusy = true;
+  c.classList.add('nav-out-' + _navDir);
+  setTimeout(() => { fn(); _navBusy = false; }, NAV_T);
+}
+
+/* Skeleton zeigen, nach ms den echten Step nachschieben.
+   goLoading(() => step2(0))                              → Formular-Skeleton
+   goLoading(step3Offer, 2400, stepLoadingOffer)          → Offer-Skeleton */
+function goLoading(fn, ms = 1800, skeleton = stepLoading, back = false) {
+  go(() => {
+    skeleton();
+    setTimeout(() => go(fn, 'fade'), ms);
+  }, back);
 }
 
 function e(s) { return (s||'').replace(/'/g,"\\'"); }
@@ -583,6 +681,78 @@ function openEntry() {
     <button class="btn-cta" onclick="go(step1Cat)">Preis ermitteln</button>
     <button class="btn-skip" onclick="closeModal()">Weiter ohne Verkauf</button>
   </div>`);
+}
+
+/* ── Loading state (Skeleton) ──
+   Positionen exakt nach Frame_6.svg: Content startet bei y=64 (Header 16+32+16),
+   die Gaps entstehen aus dem normalen Flow (.m-content gap 12, .chips-wrap gap 8,
+   .f-grp gap 12), nur die beiden margin-top-Werte setzen y=74 bzw. y=165. */
+function skeletonContent() {
+  return `
+    <div class="sk sk-bar" style="width:269px;margin-block-start:10px"></div>
+    <div class="chips-wrap">
+      <div class="sk sk-chip"></div>
+      <div class="sk sk-chip" style="--dx:108px"></div>
+      <div class="sk sk-chip" style="--dx:216px"></div>
+    </div>
+    <div class="f-grp">
+      <div class="sk sk-bar" style="width:192px;margin-block-start:15px"></div>
+      <div class="sk sk-box"></div>
+    </div>`;
+}
+
+function stepLoading() {
+  show(`
+    <div class="m-hdr">
+      <div class="m-hdr-top">
+        <button class="btn-ico" disabled>${I.back}</button>
+        ${progressBar()}
+        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+      </div>
+    </div>
+    <div class="m-content">${skeletonContent()}</div>
+  <div class="tooltip-bar" style="display:none"></div>`);
+  setProgress(_prevFills);   // Progress hält seinen Stand, springt nicht auf 0
+}
+
+/* Frame_8: Icon y102 (= Content-Start), Preiszeilen 360×20 / 250×20, Box 460×158 */
+function skeletonOfferContent() {
+  return `
+    <div class="offer-check-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" fill="none">
+        <path class="sk-spin" d="M55.374 13.6543C50.8598 11.0143 45.607 9.5 40 9.5C23.1553 9.5 9.5 23.1553 9.5 40C9.5 56.8447 23.1553 70.5 40 70.5C56.8447 70.5 70.5 56.8447 70.5 40C70.5 37.6719 70.2372 35.4052 69.7432 33.2266" stroke="#00BB66" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="sk-lines">
+      <div class="sk sk-bar" style="width:360px"></div>
+      <div class="sk sk-bar" style="width:250px"></div>
+    </div>
+    <div class="sk sk-box" style="height:158px;margin-block-start:19px"></div>`;
+}
+
+function stepLoadingOffer() {
+  const cond = CONDS.find(c => c.k === S.optical)?.t || '';
+  const bat  = S.battery ? ` / Batterie: ${S.battery === 'Ja' ? 'Mindestens 85%' : 'Unter 85%'}` : '';
+  show(`
+    <div class="m-hdr">
+      <div class="m-hdr-top">
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn-ico" disabled>${I.back}</button>
+          <button class="btn-ico" style="visibility:hidden;pointer-events:none">${I.close}</button>
+        </div>
+        ${progressBar()}
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn-ico" disabled>${I.share}</button>
+          <button class="btn-ico" onclick="closeModal()">${I.close}</button>
+        </div>
+      </div>
+      <div class="m-hdr-ctr">
+        <span class="dev-ttl">${devSum()}</span>
+        <span class="offer-sub">Zustand: ${cond}${bat}</span>
+      </div>
+    </div>
+    <div class="m-content">${skeletonOfferContent()}</div>`);
+  setProgress(_prevFills);
 }
 
 /* ── Custom search ── */
@@ -747,7 +917,7 @@ function step1Sub() {
   show(`
     <div class="m-hdr">
       <div class="m-hdr-top">
-        <button class="btn-ico" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Cat)">${I.back}</button>
+        <button class="btn-ico" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Cat, 1)">${I.back}</button>
         ${progressBar()}
         <button class="btn-ico" onclick="closeModal()">${I.close}</button>
       </div>
@@ -756,7 +926,7 @@ function step1Sub() {
       <div class="f-title">Was möchtest du verkaufen?</div>
       
       <div class="chips-wrap">
-        <div class="f-done" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Cat)">
+        <div class="f-done" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Cat, 1)">
           ${I.check}<span class="f-val">${S.cat}</span>${I.chipClose}
         </div>
       </div>
@@ -775,7 +945,7 @@ function step1Sub() {
   setProgress([.5, 0, 0]);
 }
 
-function pickSub(s) { S.sub = s; S.specs = {}; S.power = null; S.optical = null; go(() => step2(0)); }
+function pickSub(s) { S.sub = s; S.specs = {}; S.power = null; S.optical = null; goLoading(() => step2(0)); }
 
 function step2(idx) {
   const fs = fields();
@@ -784,7 +954,7 @@ function step2(idx) {
   const val = S.specs[f.k];
 
   let conf = `<div class="chips-wrap">
-    <div class="f-done" onclick="S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Sub)">${I.check}<span class="f-val">${S.sub}</span>${I.chipClose}</div>`;
+    <div class="f-done" onclick="S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Sub, 1)">${I.check}<span class="f-val">${S.sub}</span>${I.chipClose}</div>`;
   for (let i = 0; i < idx; i++) {
     const ff = fs[i];
     if (S.specs[ff.k]) {
@@ -809,7 +979,7 @@ function step2(idx) {
   show(`
     <div class="m-hdr">
       <div class="m-hdr-top">
-        <button class="btn-ico" onclick="${idx === 0 ? 'S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Sub)' : 'rewind(' + (idx-1) + ')'}">${I.back}</button>
+        <button class="btn-ico" onclick="${idx === 0 ? 'S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Sub, 1)' : 'rewind(' + (idx-1) + ')'}">${I.back}</button>
         ${progressBar()}
         <button class="btn-ico" onclick="closeModal()">${I.close}</button>
       </div>
@@ -838,7 +1008,7 @@ function rewind(to) {
   S.power = null; 
   S.battery = null;
   S.optical = null; 
-  go(() => step2(to)); 
+  go(() => step2(to), 1); 
 }
 
 /* ── Step 3 — dynamic question array ── */
@@ -860,7 +1030,7 @@ function clearStep3From(idx) {
 
 function step3(idx) {
   const qs = step3Questions();
-  if (idx >= qs.length) { go(step3Offer); return; }
+  if (idx >= qs.length) { goLoading(step3Offer, 2400, stepLoadingOffer); return; }
   const q  = qs[idx];
   const dev = devSum();
   const val = S[q.k];
@@ -869,7 +1039,7 @@ function step3(idx) {
 
   const backAction = idx === 0
     ? `rewind(fields().length - 1)`
-    : `clearStep3From(${idx - 1}); go(()=>step3(${idx - 1}))`;
+    : `clearStep3From(${idx - 1}); go(()=>step3(${idx - 1}), 1)`;
 
   let contentHtml;
   if (q.type === 'radio') {
@@ -1080,13 +1250,13 @@ function step3Offer() {
 
   if (S.power === 'Nein') {
     condLbl = 'Defekt';
-    backAction = '_coupons=[]; clearStep3From(0); go(()=>step3(0))';
+    backAction = '_coupons=[]; clearStep3From(0); go(()=>step3(0), 1)';
   } else {
     condLbl = CONDS.find(c => c.k === S.optical)?.t || '';
     const price = PRICES[S.optical] || 770;
     priceHtml = `Erhalte <span>${price.toLocaleString('de-CH')}.–</span> wenn du jetzt dein ${S.cat} verkaufst.`;
     const lastIdx = step3Questions().length - 1;
-    backAction = `_coupons=[]; S.optical=null; go(()=>step3(${lastIdx}))`;
+    backAction = `_coupons=[]; S.optical=null; go(()=>step3(${lastIdx}), 1)`;
   }
 
   const batteryLbl = S.battery ? ` / Batterie: ${S.battery === 'Ja' ? 'Mindestens 85%' : 'Unter 85%'}` : '';
