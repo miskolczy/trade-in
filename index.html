@@ -32,6 +32,10 @@
 
   --ff: 'Montserrat', sans-serif;
   --t:  .10s ease-out;
+  /* Bottom-Sheet (nur mobile): Kurven aus den nav-* Animationen übernommen.
+     Raus etwas länger als die .15s der Step-Transitions, weil der Weg 100% Höhe ist. */
+  --t-sheet-in:  .26s cubic-bezier(.22,.61,.36,1);
+  --t-sheet-out: .2s ease-in;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -73,6 +77,18 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
     max-width: 100vw;
     border-radius: var(--r-modal) var(--r-modal) 0 0; 
   }
+
+  /* Sheet fährt von unten hoch. Zwei Transitions, weil rein und raus
+     unterschiedlich lang sind: die Basisregel gilt beim Schliessen,
+     die .on-Regel beim Öffnen. */
+  .shell    { transform: translateY(100%); transition: transform var(--t-sheet-out); will-change: transform; }
+  .shell.on { transform: translateY(0);    transition: transform var(--t-sheet-in); }
+
+  /* Backdrop muss beim Schliessen so lange stehen bleiben wie die Fahrt nach
+     unten dauert — sonst reisst opacity:0 das Sheet mitten in der Bewegung weg.
+     Beim Öffnen bleibt der Fade schnell (var(--t)). */
+  .backdrop    { transition: opacity var(--t-sheet-out); }
+  .backdrop.on { transition: opacity var(--t); }
 }
 
 /* ─── Fade & Wrapper ─── */
@@ -147,11 +163,12 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
   .nav-in-bar > * { animation-duration: .01ms; animation-delay: 0s; }
   .sk { animation: none; background-image: none; }
   .sk-spin { animation: none; }
+  .shell, .shell.on { transition-duration: .01ms; }
 }
 
 /* modal-header */
 .m-hdr { display: flex; flex-direction: column; gap: 6px; padding: 16px; flex-shrink: 0; }
-.m-hdr-top  { display: flex; align-items: center; gap: 48px; min-height: 24px; }
+.m-hdr-top  { display: flex; align-items: center; gap: 10px; min-height: 24px; }
 .m-hdr-ctr  { display: flex; flex-direction: column; text-align: center; }
 
 /* Step label */
@@ -412,10 +429,22 @@ const I = {
   discount: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.499 5.5C16.6035 5.50017 17.499 6.39556 17.499 7.5V11.707C17.499 12.2504 17.2783 12.7714 16.8867 13.1484L11.2881 18.54C10.5032 19.296 9.25697 19.2838 8.48633 18.5137L4.48633 14.5137C3.71566 13.743 3.70395 12.497 4.45996 11.7119L9.85156 6.1123C10.2286 5.72104 10.7488 5.50003 11.292 5.5H15.499ZM5.90039 13.0986L9.90039 17.0986L15.499 11.707V7.5H11.292L5.90039 13.0986ZM13.5098 8.49023C14.062 8.49032 14.5098 8.938 14.5098 9.49023V9.50977C14.5098 10.062 14.062 10.5097 13.5098 10.5098H13.4902C12.9379 10.5098 12.4902 10.0621 12.4902 9.50977V9.49023C12.4902 8.93795 12.9379 8.49023 13.4902 8.49023H13.5098Z" fill="currentColor"/></svg>`,
   star: `<svg class="ico-star" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.207 6.39844C11.6027 5.87895 12.3973 5.87892 12.793 6.39844L12.8711 6.51758L14.3887 9.21094L17.4199 9.82227C18.1356 9.9668 18.4455 10.793 18.0469 11.3682L17.958 11.4795L15.8643 13.7559L16.2207 16.8271L16.2275 16.9697C16.2116 17.669 15.4751 18.1549 14.8105 17.8506V17.8516L11.999 16.5635L9.18848 17.8516V17.8506C8.48004 18.1748 7.68993 17.6008 7.7793 16.8271L8.13379 13.7549L6.04102 11.4795C5.5144 10.906 5.81705 9.97642 6.58008 9.82227L9.60938 9.21094L11.1289 6.51758L11.207 6.39844Z" fill="currentColor"/></svg>`,
   share: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="mask_share" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#D9D9D9"/></mask><g mask="url(#mask_share)"><path d="M6 21.9998C5.45 21.9998 4.97917 21.804 4.5875 21.4123C4.19583 21.0206 4 20.5498 4 19.9998V9.9998C4 9.4498 4.19583 8.97897 4.5875 8.5873C4.97917 8.19564 5.45 7.9998 6 7.9998H8C8.28333 7.9998 8.52083 8.09564 8.7125 8.2873C8.90417 8.47897 9 8.71647 9 8.9998C9 9.28314 8.90417 9.52064 8.7125 9.71231C8.52083 9.90397 8.28333 9.9998 8 9.9998H6V19.9998H18V9.9998H16C15.7167 9.9998 15.4792 9.90397 15.2875 9.71231C15.0958 9.52064 15 9.28314 15 8.9998C15 8.71647 15.0958 8.47897 15.2875 8.2873C15.4792 8.09564 15.7167 7.9998 16 7.9998H18C18.55 7.9998 19.0208 8.19564 19.4125 8.5873C19.8042 8.97897 20 9.4498 20 9.9998V19.9998C20 20.5498 19.8042 21.0206 19.4125 21.4123C19.0208 21.804 18.55 21.9998 18 21.9998H6ZM11.2875 15.7123C11.0958 15.5206 11 15.2831 11 14.9998V4.8248L10.1 5.7248C9.9 5.9248 9.66667 6.02064 9.4 6.0123C9.13333 6.00397 8.9 5.8998 8.7 5.6998C8.51667 5.4998 8.42083 5.26647 8.4125 4.9998C8.40417 4.73314 8.5 4.4998 8.7 4.2998L11.3 1.6998C11.4 1.5998 11.5083 1.52897 11.625 1.4873C11.7417 1.44564 11.8667 1.4248 12 1.4248C12.1333 1.4248 12.2583 1.44564 12.375 1.4873C12.4917 1.52897 12.6 1.5998 12.7 1.6998L15.3 4.2998C15.4833 4.48314 15.575 4.7123 15.575 4.9873C15.575 5.2623 15.4833 5.4998 15.3 5.6998C15.1 5.8998 14.8625 5.9998 14.5875 5.9998C14.3125 5.9998 14.075 5.8998 13.875 5.6998L13 4.8248V14.9998C13 15.2831 12.9042 15.5206 12.7125 15.7123C12.5208 15.904 12.2833 15.9998 12 15.9998C11.7167 15.9998 11.4792 15.904 11.2875 15.7123Z" fill="currentColor"/></g></svg>`,
+  /* Badge-Zähler ist dynamisch → Funktion statt String. cart(0) rendert den Bag ohne Badge. */
+  cart: (n = 0) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C13.1 2 14.0419 2.39147 14.8252 3.1748C15.6085 3.95814 16 4.9 16 6H18C18.55 6 19.0204 6.19622 19.4121 6.58789C19.8038 6.97956 20 7.45 20 8V11C20 11.5523 19.5523 12 19 12C18.4477 12 18 11.5523 18 11V8H16V10C16 10.2833 15.9046 10.5212 15.7129 10.7129C15.5212 10.9046 15.2833 11 15 11C14.7167 11 14.4788 10.9046 14.2871 10.7129C14.0954 10.5212 14 10.2833 14 10V8H10V10C10 10.2833 9.90456 10.5212 9.71289 10.7129C9.52122 10.9046 9.28333 11 9 11C8.71667 11 8.47878 10.9046 8.28711 10.7129C8.09544 10.5212 8 10.2833 8 10V8H6V20H10.5C11.0523 20 11.5 20.4477 11.5 21C11.5 21.5523 11.0523 22 10.5 22H6C5.45 22 4.97956 21.8038 4.58789 21.4121C4.19622 21.0204 4 20.55 4 20V8C4 7.45 4.19622 6.97956 4.58789 6.58789C4.97956 6.19622 5.45 6 6 6H8C8 4.9 8.39147 3.95814 9.1748 3.1748C9.95814 2.39147 10.9 2 12 2ZM12 4C11.45 4 10.9796 4.19622 10.5879 4.58789C10.1962 4.97956 10 5.45 10 6H14C14 5.45 13.8038 4.97956 13.4121 4.58789C13.0204 4.19622 12.55 4 12 4Z" fill="currentColor"/>${n > 0 ? `<circle cx="18" cy="18" r="5" fill="currentColor"/><text x="18" y="20.4736" text-anchor="middle" font-size="6.9" font-weight="600" fill="var(--surf-white)" style="font-family:var(--ff);font-variant-numeric:tabular-nums">${n > 9 ? '9+' : n}</text>` : ''}</svg>`,
 };
 
 /* ── State ── */
 const S = { cat: null, sub: null, specs: {}, power: null, battery: null, optical: null };
+
+/* Anzahl abgeschlossener Verkäufe — überlebt das Schliessen des Modals,
+   damit das Cart-Icon beim nächsten Durchlauf sichtbar ist. Reset nur per Reload. */
+let _sales = 0;
+
+/* "Jetzt Verkaufen" → Verkauf zählen und Modal schliessen */
+function sellAndClose() {
+  _sales++;
+  closeModal();
+}
 
 /* ── Data ── */
 const CATS = ['MacBook','iPhone','iPad','iMac','Mac'];
@@ -662,10 +691,7 @@ function devSum() {
 function openEntry() {
   show(`
     <div class="m-hdr">
-      <div class="m-hdr-top">
-        <span style="flex:1"></span>
-        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
-      </div>
+      ${hdrTop(null, { bar: false })}
     </div>
     <div class="m-content">
       <div class="f-title">Jetzt verkaufen und sparen</div>
@@ -704,11 +730,7 @@ function skeletonContent() {
 function stepLoading() {
   show(`
     <div class="m-hdr">
-      <div class="m-hdr-top">
-        <button class="btn-ico" disabled>${I.back}</button>
-        ${progressBar()}
-        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
-      </div>
+      ${hdrTop(`<button class="btn-ico" disabled>${I.back}</button>`)}
     </div>
     <div class="m-content">${skeletonContent()}</div>
   <div class="tooltip-bar" style="display:none"></div>`);
@@ -735,17 +757,7 @@ function stepLoadingOffer() {
   const bat  = S.battery ? ` / Batterie: ${S.battery === 'Ja' ? 'Mindestens 85%' : 'Unter 85%'}` : '';
   show(`
     <div class="m-hdr">
-      <div class="m-hdr-top">
-        <div style="display:flex;gap:4px;flex-shrink:0">
-          <button class="btn-ico" disabled>${I.back}</button>
-          <button class="btn-ico" style="visibility:hidden;pointer-events:none">${I.close}</button>
-        </div>
-        ${progressBar()}
-        <div style="display:flex;gap:4px;flex-shrink:0">
-          <button class="btn-ico" disabled>${I.share}</button>
-          <button class="btn-ico" onclick="closeModal()">${I.close}</button>
-        </div>
-      </div>
+      ${hdrTop(`<button class="btn-ico" disabled>${I.back}</button>`, { share: 'off' })}
       <div class="m-hdr-ctr">
         <span class="dev-ttl">${devSum()}</span>
         <span class="offer-sub">Zustand: ${cond}${bat}</span>
@@ -766,11 +778,7 @@ function catForSub(sub) {
 function step1Cat() {
   show(`
     <div class="m-hdr">
-      <div class="m-hdr-top">
-        <button class="btn-ico" style="visibility:hidden;pointer-events:none">${I.back}</button>
-        ${progressBar()}
-        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
-      </div>
+      ${hdrTop(null)}
     </div>
     <div class="m-content">
       <div class="f-title">Was möchtest du verkaufen?</div>
@@ -916,11 +924,7 @@ function step1Sub() {
 
   show(`
     <div class="m-hdr">
-      <div class="m-hdr-top">
-        <button class="btn-ico" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Cat, 1)">${I.back}</button>
-        ${progressBar()}
-        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
-      </div>
+      ${hdrTop(`<button class="btn-ico" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Cat, 1)">${I.back}</button>`)}
     </div>
     <div class="m-content">
       <div class="f-title">Was möchtest du verkaufen?</div>
@@ -978,11 +982,7 @@ function step2(idx) {
 
   show(`
     <div class="m-hdr">
-      <div class="m-hdr-top">
-        <button class="btn-ico" onclick="${idx === 0 ? 'S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Sub, 1)' : 'rewind(' + (idx-1) + ')'}">${I.back}</button>
-        ${progressBar()}
-        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
-      </div>
+      ${hdrTop(`<button class="btn-ico" onclick="${idx === 0 ? 'S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Sub, 1)' : 'rewind(' + (idx-1) + ')'}">${I.back}</button>`)}
     </div>
     <div class="m-content">
       <div class="f-title">Was möchtest du verkaufen?</div>
@@ -1091,11 +1091,7 @@ function step3(idx) {
 
   show(`
     <div class="m-hdr">
-      <div class="m-hdr-top">
-        <button class="btn-ico" onclick="${backAction}">${I.back}</button>
-        ${progressBar()}
-        <button class="btn-ico" onclick="closeModal()">${I.close}</button>
-      </div>
+      ${hdrTop(`<button class="btn-ico" onclick="${backAction}">${I.back}</button>`)}
       <div class="m-hdr-ctr">
         <span class="dev-ttl">${dev}</span>
       </div>
@@ -1263,17 +1259,7 @@ function step3Offer() {
 
   show(`
     <div class="m-hdr">
-      <div class="m-hdr-top">
-        <div style="display:flex;gap:4px;flex-shrink:0">
-          <button class="btn-ico" onclick="${backAction}">${I.back}</button>
-          <button class="btn-ico" style="visibility:hidden;pointer-events:none">${I.close}</button>
-        </div>
-        ${progressBar()}
-        <div style="display:flex;gap:4px;flex-shrink:0">
-          <button class="btn-ico" onclick="shareOffer()">${I.share}</button>
-          <button class="btn-ico" onclick="closeModal()">${I.close}</button>
-        </div>
-      </div>
+      ${hdrTop(`<button class="btn-ico" onclick="${backAction}">${I.back}</button>`, { share: true })}
       <div class="m-hdr-ctr">
         <span class="dev-ttl">${dev}</span>
         <span class="offer-sub">Zustand: ${condLbl}${batteryLbl}</span>
@@ -1304,7 +1290,7 @@ function step3Offer() {
       </div>`}
     </div>
   <div class="m-foot">
-    <button class="btn-cta" onclick="closeModal()">${S.power === 'Nein' ? 'Jetzt Recyceln' : 'Jetzt Verkaufen'}</button>
+    <button class="btn-cta" onclick="sellAndClose()">${S.power === 'Nein' ? 'Jetzt Recyceln' : 'Jetzt Verkaufen'}</button>
     <button class="btn-skip" onclick="closeModal()">Später Weiterfahren</button>
   </div>`);
   setProgress([1, 1, 1]);
@@ -1313,6 +1299,34 @@ function step3Offer() {
 /* ── Breadcrumb ── */
 function breadcrumb() {
   return `<div class="m-hdr-ctr"><span class="dev-ttl" style="text-align:center">Verkaufen</span></div>`;
+}
+
+/* ── Kopfzeile ── */
+/* Linke und rechte Gruppe bekommen immer gleich viele Slots, damit die
+   Progress-Bar exakt mittig bleibt — unsichtbare Platzhalter füllen auf.
+   back  : fertiges Back-Button-Markup, oder null für einen Platzhalter
+   share : true = aktiv, 'off' = disabled, false = kein Share-Button
+   bar   : Progress-Bar anzeigen */
+function hdrTop(back, { share = false, bar = true } = {}) {
+  const ghost = ico => `<button class="btn-ico" style="visibility:hidden;pointer-events:none">${ico}</button>`;
+
+  const right = [
+    _sales > 0
+      ? `<button class="btn-ico" onclick="closeModal()" aria-label="Warenkorb, ${_sales} ${_sales === 1 ? 'Gerät' : 'Geräte'}">${I.cart(_sales)}</button>`
+      : ghost(I.cart(1)),
+    share === 'off' ? `<button class="btn-ico" disabled>${I.share}</button>`
+      : share ? `<button class="btn-ico" onclick="shareOffer()">${I.share}</button>`
+      : '',
+    `<button class="btn-ico" onclick="closeModal()">${I.close}</button>`,
+  ].filter(Boolean);
+
+  const left = [back || ghost(I.back), ...Array(right.length - 1).fill(ghost(I.close))];
+
+  return `<div class="m-hdr-top">
+        <div style="display:flex;gap:4px;flex-shrink:0">${left.join('')}</div>
+        ${bar ? progressBar() : '<span style="flex:1"></span>'}
+        <div style="display:flex;gap:4px;flex-shrink:0">${right.join('')}</div>
+      </div>`;
 }
 
 /* ── Progress bar ── */
