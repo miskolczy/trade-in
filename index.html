@@ -210,6 +210,58 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
 .f-lbl { font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: 0; color: var(--txt2); margin-block-start: 12px; }
 .f-grp { display: flex; flex-direction: column; gap: 12px; }
 
+/* Hinweistext unter einem Feld (12/500 muted, wie .step-lbl) */
+.f-hint { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); padding: 0 4px; }
+.f-err  { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .02em; color: #c0392b; padding: 2px 4px; display: none; }
+
+/* CTA im Disabled-State (Verifizierung noch offen) */
+.btn-cta:disabled { background: var(--txt-icon-off); color: var(--surf-white); cursor: default; }
+.btn-cta:disabled:hover { opacity: 1; }
+.btn-cta:disabled:active { transform: none; }
+
+/* ════════════════════════════════════════════
+   CLOUDFLARE TURNSTILE (Nachbau — nicht customisierbar,
+   darum bewusst ausserhalb der Design-Tokens)
+   ════════════════════════════════════════════ */
+.cf-box {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; min-height: 65px;
+  background: #FAFAFA;
+  border: 1px solid #E5E5E5;
+  border-radius: 4px;
+  padding: 10px 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  user-select: none;
+}
+.cf-check {
+  flex-shrink: 0; width: 28px; height: 28px;
+  border: 2px solid #767676; border-radius: 5px;
+  background: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.cf-box.busy .cf-check, .cf-box.done .cf-check { border-color: transparent; background: none; cursor: default; display: flex; align-items: center; justify-content: center; }
+/* Verifying: 8 grüne Punkte im Kreis, laufende Sequenz (wie Turnstile) */
+.cf-spin { position: relative; width: 26px; height: 26px; animation: cf-rot 1s steps(8) infinite; }
+.cf-spin i { position: absolute; top: 0; left: 50%; width: 100%; height: 100%; margin-left: -50%; }
+.cf-spin i::before { content: ''; position: absolute; top: 0; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: #4BA83D; }
+.cf-spin i:nth-child(1) { transform: rotate(0deg);   opacity: 1; }
+.cf-spin i:nth-child(2) { transform: rotate(45deg);  opacity: .85; }
+.cf-spin i:nth-child(3) { transform: rotate(90deg);  opacity: .7; }
+.cf-spin i:nth-child(4) { transform: rotate(135deg); opacity: .55; }
+.cf-spin i:nth-child(5) { transform: rotate(180deg); opacity: .45; }
+.cf-spin i:nth-child(6) { transform: rotate(225deg); opacity: .35; }
+.cf-spin i:nth-child(7) { transform: rotate(270deg); opacity: .25; }
+.cf-spin i:nth-child(8) { transform: rotate(315deg); opacity: .15; }
+@keyframes cf-rot { to { transform: rotate(360deg); } }
+/* Success: grün gefüllter Kreis mit weissem Häkchen */
+.cf-tick { width: 28px; height: 28px; }
+.cf-lbl { flex: 1; font-size: 15px; line-height: 1.25; color: #313131; }
+.cf-brand { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.cf-brand svg { width: 74px; height: auto; display: block; }
+.cf-links { font-size: 10px; color: #313131; }
+.cf-links a { color: #313131; text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) { .cf-spin { animation-duration: 2s; } }
+
 /* ─── Confirmed row (Chips) ─── */
 .chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .f-done { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 6px 0 6px; background: var(--surf-white); border: 1px solid var(--brand); border-radius: 100px; cursor: pointer; transition: border-color .1s, background-color .1s; flex-shrink: 0; gap: 4px; width: fit-content; }
@@ -651,6 +703,7 @@ function closeModal() {
   document.getElementById('bd').classList.remove('on');
   S.cat = null; S.sub = null; S.specs = {}; S.power = null; S.battery = null; S.optical = null;
   _coupons = [];
+  V = { email: '', human: false };
   _prevFills = [0, 0, 0];
 }
 
@@ -1030,7 +1083,7 @@ function clearStep3From(idx) {
 
 function step3(idx) {
   const qs = step3Questions();
-  if (idx >= qs.length) { goLoading(step3Offer, 2400, stepLoadingOffer); return; }
+  if (idx >= qs.length) { go(stepVerify); return; }
   const q  = qs[idx];
   const dev = devSum();
   const val = S[q.k];
@@ -1107,7 +1160,7 @@ function pickStep3(idx, v) {
   const qs = step3Questions();
   S[qs[idx].k] = v;
   // power=Nein → skip remaining questions, go straight to offer
-  if (qs[idx].k === 'power' && v === 'Nein') { go(step3Offer); return; }
+  if (qs[idx].k === 'power' && v === 'Nein') { go(stepVerify); return; }
   go(() => step3(idx + 1));
 }
 
@@ -1238,6 +1291,119 @@ function sellTimingBlock(price) {
   </div>`;
 }
 
+/* ════════════════════════════════════════════
+   VERIFIZIERUNG (E-Mail + Cloudflare) — letzter Step vor dem Angebot
+   ════════════════════════════════════════════ */
+let V = { email: '', human: false };
+
+const CF_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 101.4 33.5" role="img" aria-label="Cloudflare">
+  <path fill="#fff" d="M94.7,10.6,89.1,9.3l-1-.4-25.7.2V21.5l32.3.1Z"/>
+  <path fill="#f48120" d="M84.2,20.4a2.85546,2.85546,0,0,0-.3-2.6,3.09428,3.09428,0,0,0-2.1-1.1l-17.4-.2c-.1,0-.2-.1-.3-.1a.1875.1875,0,0,1,0-.3c.1-.2.2-.3.4-.3L82,15.6a6.29223,6.29223,0,0,0,5.1-3.8l1-2.6c0-.1.1-.2,0-.3A11.39646,11.39646,0,0,0,66.2,7.7a5.45941,5.45941,0,0,0-3.6-1A5.20936,5.20936,0,0,0,58,11.3a5.46262,5.46262,0,0,0,.1,1.8A7.30177,7.30177,0,0,0,51,20.4a4.102,4.102,0,0,0,.1,1.1.3193.3193,0,0,0,.3.3H83.5c.2,0,.4-.1.4-.3Z"/>
+  <path fill="#faad3f" d="M89.7,9.2h-.5c-.1,0-.2.1-.3.2l-.7,2.4a2.85546,2.85546,0,0,0,.3,2.6,3.09428,3.09428,0,0,0,2.1,1.1l3.7.2c.1,0,.2.1.3.1a.1875.1875,0,0,1,0,.3c-.1.2-.2.3-.4.3l-3.8.2a6.29223,6.29223,0,0,0-5.1,3.8l-.2.9c-.1.1,0,.3.2.3H98.5a.26517.26517,0,0,0,.3-.3,10.87184,10.87184,0,0,0,.4-2.6,9.56045,9.56045,0,0,0-9.5-9.5"/>
+  <path fill="#404041" d="M100.5,27.2a.9.9,0,1,1,.9-.9.89626.89626,0,0,1-.9.9m0-1.6a.7.7,0,1,0,.7.7.68354.68354,0,0,0-.7-.7m.4,1.2h-.2l-.2-.3h-.2v.3h-.2v-.9h.5a.26517.26517,0,0,1,.3.3c0,.1-.1.2-.2.3l.2.3Zm-.3-.5c.1,0,.1,0,.1-.1a.09794.09794,0,0,0-.1-.1h-.3v.3h.3Zm-89.7-.9h2.2v6h3.8v1.9h-6Zm8.3,3.9a4.10491,4.10491,0,0,1,4.3-4.1,4.02,4.02,0,0,1,4.2,4.1,4.10491,4.10491,0,0,1-4.3,4.1,4.07888,4.07888,0,0,1-4.2-4.1m6.3,0a2.05565,2.05565,0,0,0-2-2.2,2.1025,2.1025,0,0,0,0,4.2c1.2.2,2-.8,2-2m4.9.5V25.4h2.2v4.4c0,1.1.6,1.7,1.5,1.7a1.39926,1.39926,0,0,0,1.5-1.6V25.4h2.2v4.4c0,2.6-1.5,3.7-3.7,3.7-2.3-.1-3.7-1.2-3.7-3.7m10.7-4.4h3.1c2.8,0,4.5,1.6,4.5,3.9s-1.7,4-4.5,4h-3V25.4Zm3.1,5.9a2.00909,2.00909,0,1,0,0-4h-.9v4Zm7.6-5.9h6.3v1.9H54v1.3h3.7v1.8H54v2.9H51.8Zm9.4,0h2.2v6h3.8v1.9h-6Zm11.7-.1h2.2l3.4,8H76.1l-.6-1.4H72.4l-.6,1.4H69.5Zm2,4.9L74,28l-.9,2.2Zm6.4-4.8H85a3.41818,3.41818,0,0,1,2.6.9,2.62373,2.62373,0,0,1-.9,4.2l1.9,2.8H86.1l-1.6-2.4h-1v2.4H81.3Zm3.6,3.8c.7,0,1.2-.4,1.2-.9,0-.6-.5-.9-1.2-.9H83.5v1.9h1.4Zm6.5-3.8h6.4v1.8H93.6v1.2h3.8v1.8H93.6v1.2h4.3v1.9H91.4ZM6.1,30.3a1.97548,1.97548,0,0,1-1.8,1.2,2.1025,2.1025,0,0,1,0-4.2,2.0977,2.0977,0,0,1,1.9,1.3H8.5a4.13459,4.13459,0,0,0-4.2-3.3A4.1651,4.1651,0,0,0,0,29.4a4.07888,4.07888,0,0,0,4.2,4.1,4.31812,4.31812,0,0,0,4.2-3.2Z"/>
+</svg>`;
+
+const CF_TICK = `<svg class="cf-tick" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="14" fill="#3B9C35"/><path d="M8 14.4L12.2 18.5L20 10.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function cfBox() {
+  const inner = V.human
+    ? `<div class="cf-check">${CF_TICK}</div><span class="cf-lbl">Erfolgreich!</span>`
+    : `<div class="cf-check" onclick="cfVerify()"></div><span class="cf-lbl">Bestätigen Sie, dass Sie ein Mensch sind</span>`;
+  return `<div class="cf-box${V.human ? ' done' : ''}" id="cf-box">
+    ${inner}
+    <div class="cf-brand">
+      ${CF_LOGO}
+      <span class="cf-links"><a href="#" onclick="return false">Privatsphäre</a> · <a href="#" onclick="return false">Hilfe</a></span>
+    </div>
+  </div>`;
+}
+
+/* Klick auf die Checkbox → Spinner → Erfolgs-Häkchen (simuliert) */
+function cfVerify() {
+  const box = document.getElementById('cf-box');
+  if (!box || V.human) return;
+  box.classList.add('busy');
+  box.querySelector('.cf-check').innerHTML = '<div class="cf-spin"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>';
+  box.querySelector('.cf-lbl').textContent = 'Überprüfung…';
+  setTimeout(() => {
+    V.human = true;
+    const b = document.getElementById('cf-box');
+    if (!b) return;
+    b.classList.remove('busy');
+    b.classList.add('done');
+    b.querySelector('.cf-check').innerHTML = CF_TICK;
+    b.querySelector('.cf-lbl').textContent = 'Erfolgreich!';
+    const err = document.getElementById('verify-error');
+    if (err) err.style.display = 'none';
+    syncVerifyCta();
+  }, 1400);
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+
+function onVerifyInput(el) {
+  V.email = el.value.trim();
+  el.classList.remove('error');
+  const err = document.getElementById('verify-error');
+  if (err) err.style.display = 'none';
+  syncVerifyCta();
+}
+
+function syncVerifyCta() {
+  const btn = document.getElementById('verify-cta');
+  if (btn) btn.disabled = !(EMAIL_RE.test(V.email) && V.human);
+}
+
+function submitVerify() {
+  const input = document.getElementById('verify-email');
+  const err = document.getElementById('verify-error');
+  V.email = input ? input.value.trim() : V.email;
+  if (!EMAIL_RE.test(V.email)) {
+    if (input) input.classList.add('error');
+    err.textContent = 'Bitte gib eine gültige E-Mail-Adresse ein.';
+    err.style.display = 'block';
+    return;
+  }
+  if (!V.human) {
+    err.textContent = 'Bitte bestätige noch, dass du ein Mensch bist.';
+    err.style.display = 'block';
+    return;
+  }
+  if (input) input.blur();
+  goLoading(step3Offer, 2400, stepLoadingOffer);
+}
+
+function stepVerify() {
+  const qs = step3Questions();
+  const backAction = S.power === 'Nein'
+    ? `go(()=>step3(0), 1)`
+    : `S.optical=null; go(()=>step3(${qs.length - 1}), 1)`;
+
+  show(`
+    <div class="m-hdr">
+      ${hdrTop(`<button class="btn-ico" onclick="${backAction}">${I.back}</button>`)}
+      <div class="m-hdr-ctr">
+        <span class="dev-ttl">${devSum()}</span>
+      </div>
+    </div>
+    <div class="m-content">
+      <div class="f-lbl">Nur noch ein Schritt bis zu deinem Preis</div>
+      <div class="f-grp">
+        <input type="email" id="verify-email" class="native-input" placeholder="E-Mail-Adresse"
+          value="${(V.email || '').replace(/"/g, '&quot;')}" autocomplete="email" inputmode="email"
+          oninput="onVerifyInput(this)" onkeydown="if(event.key==='Enter') submitVerify()">
+        <div id="verify-error" class="f-err"></div>
+        ${cfBox()}
+        <div class="f-hint">Wir brauchen die kurze Bestätigung, um deinen Preis zu ermitteln.</div>
+      </div>
+    </div>
+  <div class="m-foot">
+    <button class="btn-cta" id="verify-cta" onclick="submitVerify()" ${EMAIL_RE.test(V.email) && V.human ? '' : 'disabled'}>Preis ermitteln</button>
+    <button class="btn-skip" onclick="closeModal()">Später Weiterfahren</button>
+  </div>`);
+  setProgress([1, 1, 1]);
+}
+
 function step3Offer() {
   const dev = devSum();
   let condLbl = '';
@@ -1246,13 +1412,12 @@ function step3Offer() {
 
   if (S.power === 'Nein') {
     condLbl = 'Defekt';
-    backAction = '_coupons=[]; clearStep3From(0); go(()=>step3(0), 1)';
+    backAction = '_coupons=[]; go(stepVerify, 1)';
   } else {
     condLbl = CONDS.find(c => c.k === S.optical)?.t || '';
     const price = PRICES[S.optical] || 770;
     priceHtml = `Erhalte <span>${price.toLocaleString('de-CH')}.–</span> wenn du jetzt dein ${S.cat} verkaufst.`;
-    const lastIdx = step3Questions().length - 1;
-    backAction = `_coupons=[]; S.optical=null; go(()=>step3(${lastIdx}), 1)`;
+    backAction = '_coupons=[]; go(stepVerify, 1)';
   }
 
   const batteryLbl = S.battery ? ` / Batterie: ${S.battery === 'Ja' ? 'Mindestens 85%' : 'Unter 85%'}` : '';
