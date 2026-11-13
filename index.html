@@ -442,6 +442,7 @@ input[type="search"]::-webkit-search-cancel-button {
 /* ─── USP list ─── */
 .usp-list { display: flex; flex-direction: column; gap: 8px; justify-content: flex-end; flex: 1; }
 .usp-item { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--txt2); }
+.usp-item .usp-sub { font-weight: 500; color: var(--txt-muted); }   /* Abstufung: Kernaussage 600/txt2, Ergänzung 500/muted */
 .ico-star  { width: 24px; height: 24px; flex-shrink: 0; color: var(--brand); }
 
 /* ─── Coupon button active state ─── */
@@ -451,6 +452,7 @@ input[type="search"]::-webkit-search-cancel-button {
 .offer-price { font-size: 28px; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; color: var(--txt2); }
 .offer-price span { color: var(--brand); }
 .offer-sub   { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); }
+.offer-payout { font-size: 14px; font-weight: 500; line-height: 1.4; color: var(--txt-muted); }   /* eine Stufe über .offer-sub, wie .usp-sub */
 
 /* ─── Sell Timing Block ─── */
 .sell-timing         { background: var(--surf-white); border: 1px solid var(--border); border-radius: var(--r-field); padding: 14px 14px 0; }
@@ -760,9 +762,9 @@ function openEntry() {
       <div class="f-title">Jetzt verkaufen und sparen</div>
       <div class="intro-h">Dein altes Gerät ist bares Geld wert!</div>
       <div class="usp-list">
-        <div class="usp-item">${I.check}Sofortiger Ankaufspreis</div>
-        <div class="usp-item">${I.check}Gratis Versand</div>
-        <div class="usp-item">${I.check}Schnelle Auszahlung</div>
+        <div class="usp-item">${I.check}<span>Sofortiger Ankaufspreis <span class="usp-sub">in&nbsp;wenigen&nbsp;Schritten</span></span></div>
+        <div class="usp-item">${I.check}<span>Gratis Versand <span class="usp-sub">oder Abgabe in der Filiale</span></span></div>
+        <div class="usp-item">${I.check}<span>Schnelle Auszahlung <span class="usp-sub">als Guthaben oder aufs Konto</span></span></div>
         <div class="usp-item">${I.star}4.8 / 11'000 Bewertungen</div>
       </div>
     </div>
@@ -1261,7 +1263,7 @@ function sellTimingBlock(price) {
     <div class="sell-timing-hdr">
       <div class="usp-item">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="mask_st_td" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#D9D9D9"/></mask><g mask="url(#mask_st_td)"><path d="M18.6001 15.9998L13.4001 10.8498L10.8251 13.4248C10.4418 13.8081 9.96678 13.9998 9.40011 13.9998C8.83344 13.9998 8.35844 13.8081 7.97511 13.4248L2.70011 8.0998C2.51678 7.91647 2.42094 7.6873 2.41261 7.4123C2.40428 7.1373 2.50011 6.8998 2.70011 6.6998C2.88344 6.51647 3.11678 6.4248 3.40011 6.4248C3.68344 6.4248 3.91678 6.51647 4.10011 6.6998L9.40011 11.9998L11.9751 9.4248C12.3584 9.04147 12.8334 8.8498 13.4001 8.8498C13.9668 8.8498 14.4418 9.04147 14.8251 9.4248L20.0001 14.5998V12.9998C20.0001 12.7165 20.0959 12.479 20.2876 12.2873C20.4793 12.0956 20.7168 11.9998 21.0001 11.9998C21.2834 11.9998 21.5209 12.0956 21.7126 12.2873C21.9043 12.479 22.0001 12.7165 22.0001 12.9998V16.9998C22.0001 17.2831 21.9043 17.5206 21.7126 17.7123C21.5209 17.904 21.2834 17.9998 21.0001 17.9998H17.0001C16.7168 17.9998 16.4793 17.904 16.2876 17.7123C16.0959 17.5206 16.0001 17.2831 16.0001 16.9998C16.0001 16.7165 16.0959 16.479 16.2876 16.2873C16.4793 16.0956 16.7168 15.9998 17.0001 15.9998H18.6001Z" fill="#00BB66"/></g></svg>
-        Jetzt verkaufen lohnt sich
+        Später bekommst du weniger
       </div>
       <div class="sell-timing-prices">
         <div class="sell-timing-prc">
@@ -1426,7 +1428,7 @@ function step3Offer() {
   } else {
     condLbl = CONDS.find(c => c.k === S.optical)?.t || '';
     const price = PRICES[S.optical] || 770;
-    priceHtml = `Erhalte <span>${price.toLocaleString('de-CH')}.–</span> wenn du jetzt dein ${S.cat} verkaufst.`;
+    priceHtml = `Dein ${S.cat} ist <span>${price.toLocaleString('de-CH')}.–</span> wert.`;
     backAction = '_coupons=[]; go(stepVerify, 1)';
   }
 
@@ -1449,15 +1451,16 @@ function step3Offer() {
         </svg>
       </div>
       <div class="offer-price">${priceHtml}</div>
+      <div class="offer-payout">Als Revendo-Guthaben oder ${Math.round((PRICES[S.optical] || 770) * 0.91).toLocaleString('de-CH')}.– aufs Konto</div>
       ${sellTimingBlock(PRICES[S.optical] || 770)}` : `
       <div class="f-title">Kein Restwert – kein Problem</div>
       <div class="intro-h">Wir kümmern uns darum.</div>`}
       <div class="f-grp" style="margin-top:4px">${couponHtml()}</div>
       ${S.power !== 'Nein' ? `
       <div class="usp-list">
-        <div class="usp-item">${I.check}Gratis Versand</div>
-        <div class="usp-item">${I.check}Schnelle Auszahlung</div>
-        <div class="usp-item">${I.check}Zertifizierte Datenlöschung</div>
+        <div class="usp-item">${I.check}<span>Gratis Versand <span class="usp-sub">oder Abgabe in der Filiale</span></span></div>
+        <div class="usp-item">${I.check}<span>Datenlöschung <span class="usp-sub">nach NIST 800-88, mit&nbsp;Zertifikat</span></span></div>
+        <div class="usp-item">${I.check}<span>Gratis Rücksendung<span class="usp-sub">, wenn dir das Prüfergebnis nicht passt</span></span></div>
         <div class="usp-item">${I.star}4.8 / 11'000 Bewertungen</div>
       </div>` : `
       <div class="usp-list">
@@ -1465,7 +1468,7 @@ function step3Offer() {
       </div>`}
     </div>
   <div class="m-foot">
-    <button class="btn-cta" onclick="sellAndClose()">${S.power === 'Nein' ? 'Jetzt Recyceln' : 'Jetzt Verkaufen'}</button>
+    <button class="btn-cta" onclick="sellAndClose()">${S.power === 'Nein' ? 'Jetzt Recyceln' : 'Preis sichern'}</button>
     <button class="btn-skip" onclick="closeModal()">Später Weiterfahren</button>
   </div>`);
   setProgress([1, 1, 1]);
