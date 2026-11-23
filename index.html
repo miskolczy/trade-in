@@ -448,6 +448,28 @@ input[type="search"]::-webkit-search-cancel-button {
 /* ─── Coupon button active state ─── */
 .coupon-btn-active { background: var(--brand) !important; border-color: var(--brand) !important; color: #fff !important; }
 
+/* ─── Bonus-Tag (Kampagne: mehr Guthaben pro Kategorie) ───
+   Ein Component für alle Stellen. Text #007A3D statt --brand,
+   weil #00BB66 auf Weiss als 10px-Text den Kontrast nicht erreicht. */
+.bonus-tag { display: inline-flex; align-items: center; height: 16px; padding: 0 7px; border-radius: 100px; background: rgba(0,187,102,.10); color: #007A3D; font-size: 10px; font-weight: 600; line-height: 1; letter-spacing: .02em; white-space: nowrap; flex-shrink: 0; }
+.bonus-tag--end, .radio-row .bonus-tag--end { margin-left: auto; }   /* Suche: Tag in der Spalte, wo sonst der Preis steht */
+/* Desktop-Karten (Kategorie und Suche): Tag innen in der Ecke oben rechts. Gemessen: kollidiert mit keinem iPhone-Namen (Suche 5px
+   vertikal, Kategorie 17px seitlich). Bei langen Kategorienamen neu prüfen. */
+.cat-card, .model-card { position: relative; }
+.bonus-tag--corner { position: absolute; top: 4px; right: 4px; }   /* konzentrisch: Tag-Radius 8 + Abstand 4 = Karten-Radius 12 */
+.bonus-tag--lg { height: 24px; padding: 0 10px; font-size: 12px; }   /* Endscreen: 12px aus der bestehenden Skala */
+/* Statt-Wert wie beim Sale-Preis im Shop, hier in der Headline: neuer Wert grün,
+   alter Wert grau durchgestrichen. Grün statt Rot, weil der höhere Betrag der Gewinn ist. */
+.offer-price .offer-was-inline { color: var(--txt-muted); font-weight: 500; text-decoration-thickness: 2px; }
+.offer-gain { align-self: flex-start; margin-bottom: -4px; }   /* Eyebrow über der Headline, enger an die Headline gebunden */
+.sell-timing-prc-val.bonus-now { color: #007A3D; }   /* Prognose: Wert jetzt inkl. Bonus */
+/* Bonus-Chip: Masse und Schrift wie .f-done / .f-val (32px, Pille, 12px/600), Grün-Tönung statt Rahmen, nicht klickbar */
+.bonus-chip { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border: 1px solid transparent; border-radius: 100px; background: rgba(0,187,102,.10); color: #007A3D; font-size: 12px; font-weight: 600; line-height: 1.4; letter-spacing: .02em; white-space: nowrap; flex-shrink: 0; cursor: default; user-select: none; }   /* Status, keine Aktion: kein Hover, kein Zeiger */
+@media (max-width: 750px) { .offer-payout { text-wrap: balance; } }   /* mobil: kein einzelnes Wort in der letzten Zeile */
+.offer-price--balance { text-wrap: balance; }   /* mobil: kein einzelnes Wort in der letzten Zeile */
+@media (min-width: 751px) { .offer-price--balance { text-wrap: wrap; } }   /* Desktop: natürlicher Umbruch, erste Zeile läuft voll */
+.offer-price span, .offer-price s, .offer-payout s { white-space: nowrap; }   /* Beträge nie am Halbgeviertstrich trennen */
+
 /* ─── Offer screen ─── */
 .offer-price { font-size: 28px; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; color: var(--txt2); }
 .offer-price span { color: var(--brand); }
@@ -765,7 +787,7 @@ function openEntry() {
         <div class="usp-item">${I.check}<span>Sofortiger Ankaufspreis <span class="usp-sub">in&nbsp;wenigen&nbsp;Schritten</span></span></div>
         <div class="usp-item">${I.check}<span>Gratis Versand <span class="usp-sub">oder Abgabe in der Filiale</span></span></div>
         <div class="usp-item">${I.check}<span>Schnelle Auszahlung <span class="usp-sub">als Guthaben oder aufs Konto</span></span></div>
-        <div class="usp-item">${I.star}4.8 / 11'000 Bewertungen</div>
+        <div class="usp-item">${I.star}4.8 / 11’000 Bewertungen</div>
       </div>
     </div>
   <div class="m-foot">
@@ -890,6 +912,18 @@ const CAT_FALLBACK_IMG = {
 };
 function getSubImgUrl(sub, cat) { return SUB_IMAGES[sub] || CAT_FALLBACK_IMG[cat]; }
 
+/* Kampagne: Bonus in Prozent pro Kategorie, gilt auf Revendo-Guthaben im Checkout.
+   Leeres Objekt = keine Aktion, alle Stellen fallen auf den Normalzustand zurück. */
+const BONUS = { iPhone: 10 };
+function bonusTag(cat, end = false) {
+  const b = BONUS[cat];
+  return b ? `<span class="bonus-tag${end ? ' bonus-tag--end' : ''}">+${b}&#8239;% Bonus</span>` : '';
+}
+
+function bonusChip() {
+  return BONUS[S.cat] ? `<div class="bonus-chip" role="note">+${BONUS[S.cat]}&#8239;% Bonus</div>` : '';
+}
+
 const CAT_MAX_PRICES = {
   'MacBook': 2270,
   'iPhone':  1388,
@@ -903,17 +937,17 @@ function renderCatList() {
     ${CATS.map(c => `
       <div class="radio-row" onclick="pickCat('${e(c)}')">
         <div class="r-circle"><div class="radio-dot"></div></div>
-        <span class="radio-txt">${c}</span>
-        <span style="margin-left:auto;font-size:12px;font-weight:500;color:var(--txt-muted);white-space:nowrap">bis zu ${CAT_MAX_PRICES[c].toLocaleString('de-CH')}.–</span>
+        <span class="radio-txt">${c}</span>${bonusTag(c, true)}
+        <span style="margin-left:${BONUS[c] ? '-8px' : 'auto'};font-size:12px;font-weight:500;color:var(--txt-muted);white-space:nowrap">bis zu ${CAT_MAX_PRICES[c].toLocaleString('de-CH').replace(/'/g, '’')}.–</span>
       </div>`).join('')}
   </div>
   <div class="results-desktop">
     ${CATS.map(c => `
-      <div class="cat-card" onclick="pickCat('${e(c)}')">
+      <div class="cat-card" onclick="pickCat('${e(c)}')">${bonusTag(c).replace('bonus-tag', 'bonus-tag bonus-tag--corner')}
         <div class="cat-card-icon">${CAT_ICONS[c]}</div>
         <div class="cat-card-txt">
           <span class="radio-txt">${c}</span>
-          <span class="cat-card-price">bis zu ${CAT_MAX_PRICES[c].toLocaleString('de-CH')}.–</span>
+          <span class="cat-card-price">bis zu ${CAT_MAX_PRICES[c].toLocaleString('de-CH').replace(/'/g, '’')}.–</span>
         </div>
       </div>`).join('')}
   </div>`;
@@ -924,12 +958,12 @@ function renderSubResults(matches) {
     ${matches.map(({ sub, cat }) => `
       <div class="radio-row" onclick="S.cat='${e(cat)}'; pickSub('${e(sub)}')">
         <div class="r-circle"><div class="radio-dot"></div></div>
-        <span class="radio-txt">${sub}</span>
+        <span class="radio-txt">${sub}</span>${bonusTag(cat, true)}
       </div>`).join('')}
   </div>
   <div class="results-desktop">
     ${matches.map(({ sub, cat }) => `
-      <div class="model-card" onclick="S.cat='${e(cat)}'; pickSub('${e(sub)}')">
+      <div class="model-card" onclick="S.cat='${e(cat)}'; pickSub('${e(sub)}')">${bonusTag(cat).replace('bonus-tag', 'bonus-tag bonus-tag--corner')}
         <div class="model-card-img"><img src="${getSubImgUrl(sub, cat)}" alt="${e(sub)}" loading="lazy"></div>
         <div class="cat-card-txt">
           <span class="radio-txt">${sub}</span>
@@ -994,7 +1028,7 @@ function step1Sub() {
     <div class="m-content">
       <div class="f-title">Was möchtest du verkaufen?</div>
       
-      <div class="chips-wrap">
+      <div class="chips-wrap">${bonusChip()}
         <div class="f-done" onclick="S.cat=null; S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Cat, 1)">
           ${I.check}<span class="f-val">${S.cat}</span>${I.chipClose}
         </div>
@@ -1022,7 +1056,7 @@ function step2(idx) {
   const f = fs[idx];
   const val = S.specs[f.k];
 
-  let conf = `<div class="chips-wrap">
+  let conf = `<div class="chips-wrap">${bonusChip()}
     <div class="f-done" onclick="S.sub=null; S.specs={}; S.power=null; S.battery=null; S.optical=null; go(step1Sub, 1)">${I.check}<span class="f-val">${S.sub}</span>${I.chipClose}</div>`;
   for (let i = 0; i < idx; i++) {
     const ff = fs[i];
@@ -1246,17 +1280,18 @@ function couponHtml() {
 
 function shareOffer() {
   if (!navigator.share) return;
-  const price = PRICES[S.optical];
+  const base = PRICES[S.optical], pct = BONUS[S.cat];
+  const price = base && pct ? base + Math.round(base * pct / 100) : base;
   navigator.share({
     title: `${S.cat} verkaufen`,
     text: price
-      ? `Erhalte ${price.toLocaleString('de-CH')}.– für dein ${S.cat}`
+      ? `Erhalte ${price.toLocaleString('de-CH').replace(/'/g, '’')}.–${pct ? ` (inkl. ${pct} % Bonus)` : ''} für dein ${S.cat}`
       : `Dein ${S.cat} kann kostenlos recycelt werden`,
     url: window.location.href
   }).catch(() => {});
 }
 
-function sellTimingBlock(price) {
+function sellTimingBlock(price, now) {
   const p3 = Math.round(price * 0.92 / 10) * 10;
   const p6 = Math.round(price * 0.85 / 10) * 10;
   return `<div class="sell-timing">
@@ -1266,12 +1301,16 @@ function sellTimingBlock(price) {
         Später bekommst du weniger
       </div>
       <div class="sell-timing-prices">
+        ${now ? `<div class="sell-timing-prc">
+          <span class="sell-timing-prc-val bonus-now">${now.toLocaleString('de-CH').replace(/'/g, '’')}.–</span>
+          <span class="sell-timing-prc-lbl">jetzt</span>
+        </div>` : ''}
         <div class="sell-timing-prc">
-          <span class="sell-timing-prc-val">${p3.toLocaleString('de-CH')}.–</span>
+          <span class="sell-timing-prc-val">${p3.toLocaleString('de-CH').replace(/'/g, '’')}.–</span>
           <span class="sell-timing-prc-lbl">in 3 Mon.</span>
         </div>
         <div class="sell-timing-prc">
-          <span class="sell-timing-prc-val">${p6.toLocaleString('de-CH')}.–</span>
+          <span class="sell-timing-prc-val">${p6.toLocaleString('de-CH').replace(/'/g, '’')}.–</span>
           <span class="sell-timing-prc-lbl">in 6 Mon.</span>
         </div>
       </div>
@@ -1299,7 +1338,7 @@ function sellTimingBlock(price) {
         </defs>
       </svg>
     </div>
-    <span class="sell-timing-est">* Schätzung</span>
+    <span class="sell-timing-est">${now ? '* Schätzung, ohne Bonus' : '* Schätzung'}</span>
   </div>`;
 }
 
@@ -1428,7 +1467,7 @@ function step3Offer() {
   } else {
     condLbl = CONDS.find(c => c.k === S.optical)?.t || '';
     const price = PRICES[S.optical] || 770;
-    priceHtml = `Dein ${S.cat} ist <span>${price.toLocaleString('de-CH')}.–</span> wert.`;
+    priceHtml = `Dein ${S.cat} ist <span>${price.toLocaleString('de-CH').replace(/'/g, '’')}.–</span> wert.`;
     backAction = '_coupons=[]; go(stepVerify, 1)';
   }
 
@@ -1450,9 +1489,17 @@ function step3Offer() {
           <path class="offer-tick" d="M25.5 41.5L35 51L69 17" stroke="#00BB66" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
+      ${BONUS[S.cat] ? (() => {
+        const base = PRICES[S.optical] || 770, pct = BONUS[S.cat];
+        const bonus = Math.round(base * pct / 100), f = n => n.toLocaleString('de-CH').replace(/'/g, '’') + '.–';
+        return `
+      <span class="bonus-tag bonus-tag--lg offer-gain">+${pct}&#8239;% Bonus – Du erhältst jetzt ${f(bonus)} mehr</span>
+      <div class="offer-price offer-price--balance">Dein ${S.cat} ist <span>${f(base + bonus)}</span> wert statt&nbsp;<s class="offer-was-inline">${f(base)}</s></div>
+      <div class="offer-payout">Als Revendo-Guthaben oder ${f(Math.round((base + bonus) * 0.91))} statt&nbsp;<s>${f(Math.round(base * 0.91))}</s> aufs Konto</div>`;
+      })() : `
       <div class="offer-price">${priceHtml}</div>
-      <div class="offer-payout">Als Revendo-Guthaben oder ${Math.round((PRICES[S.optical] || 770) * 0.91).toLocaleString('de-CH')}.– aufs Konto</div>
-      ${sellTimingBlock(PRICES[S.optical] || 770)}` : `
+      <div class="offer-payout">Als Revendo-Guthaben oder ${Math.round((PRICES[S.optical] || 770) * 0.91).toLocaleString('de-CH').replace(/'/g, '’')}.– aufs Konto</div>`}
+      ${sellTimingBlock(PRICES[S.optical] || 770, BONUS[S.cat] ? (PRICES[S.optical] || 770) + Math.round((PRICES[S.optical] || 770) * BONUS[S.cat] / 100) : 0)}` : `
       <div class="f-title">Kein Restwert – kein Problem</div>
       <div class="intro-h">Wir kümmern uns darum.</div>`}
       <div class="f-grp" style="margin-top:4px">${couponHtml()}</div>
@@ -1461,14 +1508,14 @@ function step3Offer() {
         <div class="usp-item">${I.check}<span>Gratis Versand <span class="usp-sub">oder Abgabe in der Filiale</span></span></div>
         <div class="usp-item">${I.check}<span>Datenlöschung <span class="usp-sub">nach NIST 800-88, mit&nbsp;Zertifikat</span></span></div>
         <div class="usp-item">${I.check}<span>Gratis Rücksendung<span class="usp-sub">, wenn dir das Prüfergebnis nicht passt</span></span></div>
-        <div class="usp-item">${I.star}4.8 / 11'000 Bewertungen</div>
+        <div class="usp-item">${I.star}4.8 / 11’000 Bewertungen</div>
       </div>` : `
       <div class="usp-list">
-        <div class="usp-item">${I.star}4.8 / 11'000 Bewertungen</div>
+        <div class="usp-item">${I.star}4.8 / 11’000 Bewertungen</div>
       </div>`}
     </div>
   <div class="m-foot">
-    <button class="btn-cta" onclick="sellAndClose()">${S.power === 'Nein' ? 'Jetzt Recyceln' : 'Preis sichern'}</button>
+    <button class="btn-cta" onclick="sellAndClose()">${S.power === 'Nein' ? 'Jetzt Recyceln' : BONUS[S.cat] ? 'Bonus sichern' : 'Preis sichern'}</button>
     <button class="btn-skip" onclick="closeModal()">Später Weiterfahren</button>
   </div>`);
   setProgress([1, 1, 1]);
@@ -1539,6 +1586,24 @@ function tooltipText() {
     ? 'Öffne Einstellungen → Allgemein → Info'
     : 'Wähle Menü Apple → Über diesen Mac';
 }
+</script>
+<script>
+/* Preview-Boot: ?screen=cat|search|offer[&q=...] */
+(async () => {
+  const p = new URLSearchParams(location.search), sc = p.get('screen');
+  if (!sc) return;
+  const w = ms => new Promise(r => setTimeout(r, ms));
+  openEntry(); await w(150);
+  if (sc === 'cat' || sc === 'search') {
+    step1Cat(); await w(200);
+    if (sc === 'search') { const i = document.getElementById('device-search'); i.value = p.get('q') || 'iPhone 15'; onDeviceInput(i.value); }
+  }
+  if (sc === 'sub') { Object.assign(S, { cat: 'iPhone' }); step1Sub(); }
+  if (sc === 'offer') {
+    Object.assign(S, { cat: 'iPhone', sub: 'iPhone 15 Pro', power: 'Ja', battery: 'Ja', optical: 'wie-neu' });
+    step3Offer();
+  }
+})();
 </script>
 </body>
 </html>
