@@ -462,7 +462,6 @@ input[type="search"]::-webkit-search-cancel-button {
    alter Wert grau durchgestrichen. Grün statt Rot, weil der höhere Betrag der Gewinn ist. */
 .offer-price .offer-was-inline { color: var(--txt-muted); font-weight: 500; text-decoration-thickness: 2px; }
 .offer-gain { align-self: flex-start; margin-bottom: -4px; }   /* Eyebrow über der Headline, enger an die Headline gebunden */
-.sell-timing-prc-val.bonus-now { color: #007A3D; }   /* Prognose: Wert jetzt inkl. Bonus */
 /* Bonus-Chip: Masse und Schrift wie .f-done / .f-val (32px, Pille, 12px/600), Grün-Tönung statt Rahmen, nicht klickbar */
 .bonus-chip { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border: 1px solid transparent; border-radius: 100px; background: rgba(0,187,102,.10); color: #007A3D; font-size: 12px; font-weight: 600; line-height: 1.4; letter-spacing: .02em; white-space: nowrap; flex-shrink: 0; cursor: default; user-select: none; }   /* Status, keine Aktion: kein Hover, kein Zeiger */
 @media (max-width: 750px) { .offer-payout { text-wrap: balance; } }   /* mobil: kein einzelnes Wort in der letzten Zeile */
@@ -1291,7 +1290,7 @@ function shareOffer() {
   }).catch(() => {});
 }
 
-function sellTimingBlock(price, now) {
+function sellTimingBlock(price) {
   const p3 = Math.round(price * 0.92 / 10) * 10;
   const p6 = Math.round(price * 0.85 / 10) * 10;
   return `<div class="sell-timing">
@@ -1301,10 +1300,6 @@ function sellTimingBlock(price, now) {
         Später bekommst du weniger
       </div>
       <div class="sell-timing-prices">
-        ${now ? `<div class="sell-timing-prc">
-          <span class="sell-timing-prc-val bonus-now">${now.toLocaleString('de-CH').replace(/'/g, '’')}.–</span>
-          <span class="sell-timing-prc-lbl">jetzt</span>
-        </div>` : ''}
         <div class="sell-timing-prc">
           <span class="sell-timing-prc-val">${p3.toLocaleString('de-CH').replace(/'/g, '’')}.–</span>
           <span class="sell-timing-prc-lbl">in 3 Mon.</span>
@@ -1338,7 +1333,7 @@ function sellTimingBlock(price, now) {
         </defs>
       </svg>
     </div>
-    <span class="sell-timing-est">${now ? '* Schätzung, ohne Bonus' : '* Schätzung'}</span>
+    <span class="sell-timing-est">* Schätzung</span>
   </div>`;
 }
 
@@ -1499,7 +1494,7 @@ function step3Offer() {
       })() : `
       <div class="offer-price">${priceHtml}</div>
       <div class="offer-payout">Als Revendo-Guthaben oder ${Math.round((PRICES[S.optical] || 770) * 0.91).toLocaleString('de-CH').replace(/'/g, '’')}.– aufs Konto</div>`}
-      ${sellTimingBlock(PRICES[S.optical] || 770, BONUS[S.cat] ? (PRICES[S.optical] || 770) + Math.round((PRICES[S.optical] || 770) * BONUS[S.cat] / 100) : 0)}` : `
+      ${sellTimingBlock(PRICES[S.optical] || 770)}` : `
       <div class="f-title">Kein Restwert – kein Problem</div>
       <div class="intro-h">Wir kümmern uns darum.</div>`}
       <div class="f-grp" style="margin-top:4px">${couponHtml()}</div>
