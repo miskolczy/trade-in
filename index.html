@@ -178,6 +178,7 @@ html, body { font-family: var(--ff); background: var(--surf-subtle); min-height:
 /* Step label */
 .step-lbl { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .03em; color: var(--txt-muted); flex: 1; min-height: 24px; align-content: center; }
 .dev-ttl  { font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: .02em; color: var(--txt-muted); align-content: center; }
+.dev-row  { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; column-gap: 6px; row-gap: 2px; }   /* Zustandsfragen: Bonus-Tag direkt an der Modellbezeichnung */
 
 /* Offer label with animated check */
 .offer-check-wrap { display: flex; justify-content: center;}
@@ -1191,7 +1192,7 @@ function step3(idx) {
     <div class="m-hdr">
       ${hdrTop(`<button class="btn-ico" onclick="${backAction}">${I.back}</button>`)}
       <div class="m-hdr-ctr">
-        <span class="dev-ttl">${dev}</span>
+        <div class="dev-row"><span class="dev-ttl">${dev}</span>${bonusTag(S.cat)}</div>
       </div>
     </div>
     <div class="m-content"${contentStyle}>${contentHtml}
@@ -1429,7 +1430,7 @@ function stepVerify() {
     <div class="m-hdr">
       ${hdrTop(`<button class="btn-ico" onclick="${backAction}">${I.back}</button>`)}
       <div class="m-hdr-ctr">
-        <span class="dev-ttl">${devSum()}</span>
+        <div class="dev-row"><span class="dev-ttl">${devSum()}</span>${bonusTag(S.cat)}</div>
       </div>
     </div>
     <div class="m-content">
